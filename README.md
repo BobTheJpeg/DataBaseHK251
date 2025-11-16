@@ -16,7 +16,6 @@ The project uses a simple monorepo structure with separate `client` and `server`
 - [Project Installation](#-project-installation)
 - [Running the Project](#️-running-the-project)
 - [Environment Variables](#-environment-variables)
-- [API Endpoints](#-api-endpoints)
 - [Git Workflow](#-git-workflow)
 - [Available Scripts](#-available-scripts)
 
@@ -94,24 +93,6 @@ PORT=3000
 ```
 
 Make sure your PostgreSQL server is running.
-
-## 🔌 API Endpoints
-
-### GET /api/items
-
-Returns all items from the database.
-
-### POST /api/items
-
-Create a new item.
-
-**Body example:**
-
-```json
-{
-  "name": "Example item"
-}
-```
 
 ## 🔄 Git Workflow
 
