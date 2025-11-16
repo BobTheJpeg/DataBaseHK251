@@ -1,35 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import LandingPage from "./pages/LandingPage";
 
-function App() {
-  const [count, setCount] = useState(0)
+import ServerDashboard from "./pages/ServerDashboard";
+import ChefDashboard from "./pages/ChefDashboard.jsx";
+import ReceptionDashboard from "./pages/ReceptionDashboard";
+import ManagerDashboard from "./pages/ManagerDashboard";
+import StorageDashboard from "./pages/StorageDashboard";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function ProtectedRoute({ children, roles }) {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  if (!user.role) return <Navigate to="/login" />;
+  if (!roles.includes(user.role)) return <Navigate to="/login" />;
+  return children;
 }
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route
+        path="/server"
+        element={
+          <ProtectedRoute roles={["server"]}>
+            <ServerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chef"
+        element={
+          <ProtectedRoute roles={["chef", "head_chef"]}>
+            <ChefDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reception"
+        element={
+          <ProtectedRoute roles={["receptionist"]}>
+            <ReceptionDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager"
+        element={
+          <ProtectedRoute roles={["manager"]}>
+            <ManagerDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/storage"
+        element={
+          <ProtectedRoute roles={["storage_manager"]}>
+            <StorageDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+}
