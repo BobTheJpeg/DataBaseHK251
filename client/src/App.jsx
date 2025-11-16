@@ -5,22 +5,30 @@ import LandingPage from "./pages/LandingPage";
 import ServerDashboard from "./pages/ServerDashboard";
 import ChefDashboard from "./pages/ChefDashboard.jsx";
 import ReceptionDashboard from "./pages/ReceptionDashboard";
-import ManagerDashboard from "./pages/ManagerDashboard";
 import StorageDashboard from "./pages/StorageDashboard";
+import ManagerHome from "./pages/manager/ManagerHome";
+import ManageEmployees from "./pages/manager/ManageEmployees";
+import ManageMenu from "./pages/manager/ManageMenu";
+import AccessDenied from "./pages/AccessDenied";
 
 function ProtectedRoute({ children, roles }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   if (!user.role) return <Navigate to="/login" />;
-  if (!roles.includes(user.role)) return <Navigate to="/login" />;
+  if (!roles.includes(user.role)) return <Navigate to="/access-denied" />;
   return children;
 }
 
 export default function App() {
   return (
     <Routes>
+      {/* Public Pages */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
 
+      {/* Wrong Role */}
+      <Route path="/access-denied" element={<AccessDenied />} />
+
+      {/* Server Dashboard */}
       <Route
         path="/server"
         element={
@@ -29,6 +37,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Chef Dashboard */}
       <Route
         path="/chef"
         element={
@@ -37,6 +47,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Receptionist Dashboard */}
       <Route
         path="/reception"
         element={
@@ -45,14 +57,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/manager"
-        element={
-          <ProtectedRoute roles={["manager"]}>
-            <ManagerDashboard />
-          </ProtectedRoute>
-        }
-      />
+
+      {/* Storage Manager Dashboard */}
       <Route
         path="/storage"
         element={
@@ -62,6 +68,36 @@ export default function App() {
         }
       />
 
+      {/* ---------------------- MANAGER ROUTES ---------------------- */}
+      <Route
+        path="/manager"
+        element={
+          <ProtectedRoute roles={["manager"]}>
+            <ManagerHome />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/manager/employees"
+        element={
+          <ProtectedRoute roles={["manager"]}>
+            <ManageEmployees />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/manager/menu"
+        element={
+          <ProtectedRoute roles={["manager"]}>
+            <ManageMenu />
+          </ProtectedRoute>
+        }
+      />
+      {/* -------------------------------------------------------------- */}
+
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

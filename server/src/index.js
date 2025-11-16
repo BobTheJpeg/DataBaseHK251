@@ -1,23 +1,19 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import itemsRouter from "./routes/items.js";
+import { config } from "./config.js";
 
-dotenv.config();
+import authRoutes from "./routes/auth.js";
+import managerRoutes from "./routes/manager.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// API routes
-app.use("/api/items", itemsRouter);
+app.get("/", (req, res) => res.send("Restaurant backend running ✓"));
 
-const PORT = process.env.PORT || 3000;
+app.use("/api/auth", authRoutes);
+app.use("/api/manager", managerRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Backend is running!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Backend running at http://localhost:${PORT}`);
-});
+app.listen(config.port, () =>
+  console.log(`Backend running on http://localhost:${config.port}`)
+);

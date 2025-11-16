@@ -50,8 +50,8 @@ export default function LandingPage() {
       </Link>
 
       {/* Small footer */}
-      <p style={{ marginTop: "40px", color: "#888", fontSize: "12px" }}>
-        © 2025 Restaurant Management System
+      <p style={{ marginTop: "80px", color: "#888", fontSize: "16px" }}>
+        ©2025 Group_4_L08 Restaurant Management System
       </p>
     </div>
   );
