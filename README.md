@@ -1,10 +1,10 @@
-# Full Stack App — React + Node.js + PostgreSQL
+# Full Stack App — React + Node.js + MSSQL
 
 A modern full-stack application built with:
 
 - **Client:** React + Vite (JavaScript)
 - **Server:** Node.js + Express
-- **Database:** PostgreSQL (via `pg` driver)
+- **Database:** MSSQL
 
 The project uses a simple monorepo structure with separate `client` and `server` workspaces.
 
@@ -25,7 +25,7 @@ The project uses a simple monorepo structure with separate `client` and `server`
 
 - **Node.js >= 18**
 - **npm >= 9**
-- **PostgreSQL >= 14**
+- **MSSQL >= 2022**
 - **Git**
 
 ---
