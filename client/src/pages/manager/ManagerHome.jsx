@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+import DashboardLayout from "../../components/DashboardLayout";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -7,76 +9,104 @@ export default function ManagerHome() {
     ordersToday: 0,
     customersToday: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/manager/stats")
-      .then((res) => res.json())
-      .then((data) => setStats(data));
+    async function loadStats() {
+      try {
+        const res = await fetch("http://localhost:3000/api/manager/stats", {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        });
+
+        if (!res.ok) {
+          setError("Failed to load stats.");
+          return;
+        }
+
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        setError("Server error");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadStats();
   }, []);
 
   return (
-    <div
-      style={{
-        padding: "40px",
-        fontFamily: "Arial, sans-serif",
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-      }}
-    >
-      {/* TITLE */}
-      <h1 style={{ marginBottom: "10px" }}>Manager Dashboard</h1>
-      <p style={{ color: "#666" }}>
-        Overview of today's restaurant performance.
-      </p>
-
-      {/* STATS SECTION */}
+    <DashboardLayout>
       <div
         style={{
+          padding: "40px",
+          fontFamily: "Arial, sans-serif",
           display: "flex",
+          flexDirection: "column",
           gap: "20px",
-          flexWrap: "wrap",
         }}
       >
-        <div style={cardStyle}>
-          <h3>Revenue Today</h3>
-          <p style={statValue}>${stats.revenueToday}</p>
-        </div>
+        <h1>Manager Dashboard</h1>
+        <p style={{ color: "#666" }}>
+          Overview of today's restaurant performance.
+        </p>
 
-        <div style={cardStyle}>
-          <h3>Orders Today</h3>
-          <p style={statValue}>{stats.ordersToday}</p>
-        </div>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+        {loading && <p>Loading statistics...</p>}
 
-        <div style={cardStyle}>
-          <h3>Customers Today</h3>
-          <p style={statValue}>{stats.customersToday}</p>
+        {/* STATS */}
+        {!loading && !error && (
+          <div
+            style={{
+              display: "flex",
+              gap: "20px",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={cardStyle}>
+              <h3>Revenue Today</h3>
+              <p style={statValue}>${Number(stats.revenueToday).toFixed(2)}</p>
+            </div>
+
+            <div style={cardStyle}>
+              <h3>Orders Today</h3>
+              <p style={statValue}>{stats.ordersToday}</p>
+            </div>
+
+            <div style={cardStyle}>
+              <h3>Customers Today</h3>
+              <p style={statValue}>{stats.customersToday}</p>
+            </div>
+          </div>
+        )}
+
+        {/* MANAGEMENT LINKS */}
+        <h2 style={{ marginTop: "30px" }}>Management Tools</h2>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "20px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link to="/manager/employees" style={actionButton}>
+            👤 Manage Employees
+          </Link>
+
+          <Link to="/manager/menu" style={actionButton}>
+            🍽 Manage Menu
+          </Link>
+
+          <Link to="/manager/reports" style={actionButton}>
+            📊 View Reports (Coming soon)
+          </Link>
         </div>
       </div>
-
-      {/* ACTION SECTION */}
-      <h2 style={{ marginTop: "30px" }}>Management Tools</h2>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "20px",
-          flexWrap: "wrap",
-        }}
-      >
-        <Link to="/manager/employees" style={actionButton}>
-          👤 Manage Employees
-        </Link>
-
-        <Link to="/manager/menu" style={actionButton}>
-          🍽 Manage Menu
-        </Link>
-
-        <Link to="/manager/reports" style={actionButton}>
-          📊 View Reports (Coming soon)
-        </Link>
-      </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
