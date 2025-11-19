@@ -88,8 +88,13 @@ http://localhost:5173
 Inside /server/.env:
 
 ```ini
-DATABASE_URL=postgres://username:password@localhost:5432/mydatabase
+DB_USER=YOUR DATABASE USER NAME
+DB_PASSWORD=YOUR DATABASE PASSWORD
+DB_SERVER=YOUR DATABASE NAME SERVER
+DB_NAME=YOUR DATABASE NAME
+
 PORT=3000
+JWT_SECRET=WILL BE SHARED IN PRIVATE GROUP CHAT
 ```
 
 Make sure your PostgreSQL server is running.
