@@ -1,10 +1,15 @@
-import pkg from "pg";
-import dotenv from "dotenv";
+import sql from "mssql";
 
-dotenv.config();
+// MSSQL connection settings
+const config = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER, // localhost
+  database: process.env.DB_NAME, // RestaurantDB
+  options: {
+    trustServerCertificate: true, // required for local dev
+  },
+};
 
-const { Pool } = pkg;
-
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+export const pool = new sql.ConnectionPool(config);
+export const poolConnect = pool.connect();
