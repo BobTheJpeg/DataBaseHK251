@@ -1,23 +1,26 @@
 export default function LogoutButton() {
   function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+    window.location.href = "/";
   }
 
   return (
-    <button
-      onClick={handleLogout}
-      style={{
-        padding: "10px 16px",
-        background: "#b30000",
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
-        cursor: "pointer",
-      }}
-    >
+    <button onClick={handleLogout} style={styles.button}>
       Logout
     </button>
   );
 }
+
+const styles = {
+  button: {
+    backgroundColor: "#b3541e",
+    color: "white",
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    width: "100%",
+    transition: "0.2s",
+  },
+};

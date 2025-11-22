@@ -2,79 +2,64 @@ import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
 
 export default function DashboardLayout({ children }) {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: "Arial" }}>
+    <div style={styles.layout}>
       {/* SIDEBAR */}
-      <aside
-        style={{
-          width: "240px",
-          background: "#222",
-          color: "white",
-          padding: "20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "15px",
-        }}
-      >
-        <h2 style={{ marginBottom: "20px" }}>{user.role.toUpperCase()}</h2>
+      <aside style={styles.sidebar}>
+        <h2 style={styles.role}>{user.role?.toUpperCase()}</h2>
 
         {/* Role-Based Links */}
         {user.role === "manager" && (
           <>
-            <Link style={navLink} to="/manager">
-              📊 Dashboard
+            <Link style={styles.link} to="/manager">
+              Dashboard
             </Link>
-            <Link style={navLink} to="/manager/employees">
-              👤 Employees
+            <Link style={styles.link} to="/manager/employees">
+              Employees
             </Link>
-            <Link style={navLink} to="/manager/menu">
-              🍽 Menu
+            <Link style={styles.link} to="/manager/menu">
+              Menu
             </Link>
-            <Link style={navLink} to="/manager/reports">
-              📈 Reports
+            <Link style={styles.link} to="/manager/reports">
+              Reports
             </Link>
           </>
         )}
 
         {user.role === "server" && (
           <>
-            <Link style={navLink} to="/server">
-              🧾 Orders
+            <Link style={styles.link} to="/server">
+              Orders
             </Link>
-            <Link style={navLink} to="/server/tables">
-              🍽 Tables
+            <Link style={styles.link} to="/server/tables">
+              Tables
             </Link>
           </>
         )}
 
-        {user.role === "chef" ||
-          (user.role === "head_chef" && (
-            <>
-              <Link style={navLink} to="/chef">
-                🍳 Kitchen Queue
-              </Link>
-            </>
-          ))}
+        {(user.role === "chef" || user.role === "head_chef") && (
+          <Link style={styles.link} to="/chef">
+            Kitchen Queue
+          </Link>
+        )}
 
         {user.role === "receptionist" && (
           <>
-            <Link style={navLink} to="/reception">
-              🪑 Table Booking
+            <Link style={styles.link} to="/reception">
+              Table Booking
             </Link>
-            <Link style={navLink} to="/reception/payments">
-              💳 Payments
+            <Link style={styles.link} to="/reception/payments">
+              Payments
             </Link>
           </>
         )}
 
         {user.role === "storage_manager" && (
-          <>
-            <Link style={navLink} to="/storage">
-              📦 Inventory
-            </Link>
-          </>
+          <Link style={styles.link} to="/storage">
+            Inventory
+          </Link>
         )}
 
         <div style={{ marginTop: "auto" }}>
@@ -83,15 +68,8 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main style={{ flex: 1, padding: "30px", background: "#f3f3f3" }}>
-        {/* Top bar */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-          }}
-        >
+      <main style={styles.main}>
+        <div style={styles.topbar}>
           <h1>{user.name}</h1>
         </div>
 
@@ -101,11 +79,57 @@ export default function DashboardLayout({ children }) {
   );
 }
 
-const navLink = {
-  color: "white",
-  textDecoration: "none",
-  padding: "10px",
-  borderRadius: "6px",
-  background: "#333",
-  display: "block",
+/* ========================= */
+/* INLINE STYLING OBJECT     */
+/* ========================= */
+
+const styles = {
+  layout: {
+    display: "flex",
+    height: "100vh",
+    fontFamily: "Segoe UI, sans-serif",
+    background: "#f3f3f3",
+    marginLeft: "240px", // ⭐ tránh bị che bởi sidebar
+  },
+
+  sidebar: {
+    width: "240px",
+    background: "#5a381e",
+    color: "white",
+    padding: "20px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    position: "fixed", // ⭐ GIỮ NGUYÊN KHI SCROLL
+    top: 0,
+    left: 0,
+    bottom: 0,
+    height: "100vh", // luôn full cao
+  },
+  role: {
+    marginBottom: "20px",
+    fontSize: "1.4rem",
+    letterSpacing: "1px",
+  },
+
+  link: {
+    color: "white",
+    textDecoration: "none",
+    padding: "10px 12px",
+    borderRadius: "6px",
+    background: "#7a4d28",
+    display: "block",
+    transition: "0.2s",
+  },
+
+  main: {
+    flex: 1,
+    padding: "30px",
+  },
+
+  topbar: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: "20px",
+  },
 };

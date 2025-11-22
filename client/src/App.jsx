@@ -1,18 +1,18 @@
+import "./index.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 
 import ServerDashboard from "./pages/ServerDashboard";
 import ChefDashboard from "./pages/ChefDashboard.jsx";
-import ReceptionDashboard from "./pages/ReceptionDashboard";
 import StorageDashboard from "./pages/StorageDashboard";
-import ManagerHome from "./pages/manager/ManagerHome";
-import ManageEmployees from "./pages/manager/ManageEmployees";
-import ManageMenu from "./pages/manager/ManageMenu";
+import { ReceptionDashboard } from "./pages/receptionist/";
+import { ManageEmployees, ManagerHome, ManageMenu } from "./pages/manager/";
 import AccessDenied from "./pages/AccessDenied";
+import ErrorPage from "./pages/ErrorPage.jsx";
 
 function ProtectedRoute({ children, roles }) {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
   if (!user.role) return <Navigate to="/login" />;
   if (!roles.includes(user.role)) return <Navigate to="/access-denied" />;
   return children;
@@ -24,6 +24,7 @@ export default function App() {
       {/* Public Pages */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/error" element={<ErrorPage />} />
 
       {/* Wrong Role */}
       <Route path="/access-denied" element={<AccessDenied />} />
@@ -98,7 +99,7 @@ export default function App() {
       {/* -------------------------------------------------------------- */}
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<Navigate to="/error" />} />
     </Routes>
   );
 }

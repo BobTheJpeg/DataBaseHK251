@@ -5,5 +5,4 @@ const router = express.Router();
 
 router.post("/login", login);
 router.post("/seed-user", seedUser);
-
 export default router;

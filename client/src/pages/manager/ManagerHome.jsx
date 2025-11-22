@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import DashboardLayout from "../../components/DashboardLayout";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -9,6 +8,7 @@ export default function ManagerHome() {
     ordersToday: 0,
     customersToday: 0,
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -17,7 +17,7 @@ export default function ManagerHome() {
       try {
         const res = await fetch("http://localhost:3000/api/manager/stats", {
           headers: {
-            Authorization: "Bearer " + localStorage.getItem("token"),
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
           },
         });
 
@@ -28,7 +28,7 @@ export default function ManagerHome() {
 
         const data = await res.json();
         setStats(data);
-      } catch (err) {
+      } catch {
         setError("Server error");
       } finally {
         setLoading(false);
@@ -40,19 +40,9 @@ export default function ManagerHome() {
 
   return (
     <DashboardLayout>
-      <div
-        style={{
-          padding: "40px",
-          fontFamily: "Arial, sans-serif",
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-        }}
-      >
-        <h1>Manager Dashboard</h1>
-        <p style={{ color: "#666" }}>
-          Overview of today's restaurant performance.
-        </p>
+      <div style={{ padding: "40px" }}>
+        <h1 style={{ color: "#5a381e" }}>Manager Dashboard</h1>
+        <p style={{ color: "#666" }}>Overview of today's performance</p>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
         {loading && <p>Loading statistics...</p>}
@@ -64,11 +54,12 @@ export default function ManagerHome() {
               display: "flex",
               gap: "20px",
               flexWrap: "wrap",
+              marginTop: "20px",
             }}
           >
             <div style={cardStyle}>
               <h3>Revenue Today</h3>
-              <p style={statValue}>${Number(stats.revenueToday).toFixed(2)}</p>
+              <p style={statValue}>${stats.revenueToday.toFixed(2)}</p>
             </div>
 
             <div style={cardStyle}>
@@ -84,25 +75,28 @@ export default function ManagerHome() {
         )}
 
         {/* MANAGEMENT LINKS */}
-        <h2 style={{ marginTop: "30px" }}>Management Tools</h2>
+        <h2 style={{ marginTop: "35px", color: "#5a381e" }}>
+          Management Tools
+        </h2>
 
         <div
           style={{
             display: "flex",
             gap: "20px",
             flexWrap: "wrap",
+            marginTop: "15px",
           }}
         >
           <Link to="/manager/employees" style={actionButton}>
-            👤 Manage Employees
+            Manage Employees
           </Link>
 
           <Link to="/manager/menu" style={actionButton}>
-            🍽 Manage Menu
+            Manage Menu
           </Link>
 
           <Link to="/manager/reports" style={actionButton}>
-            📊 View Reports (Coming soon)
+            View Reports (Coming soon)
           </Link>
         </div>
       </div>
@@ -110,29 +104,29 @@ export default function ManagerHome() {
   );
 }
 
-/* Styles */
 const cardStyle = {
   background: "white",
-  padding: "20px",
-  width: "250px",
-  borderRadius: "10px",
-  boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
+  padding: "25px",
+  minWidth: "250px",
+  borderRadius: "12px",
+  boxShadow: "0 3px 10px rgba(0,0,0,0.15)",
 };
 
 const statValue = {
   fontSize: "32px",
   fontWeight: "bold",
-  marginTop: "10px",
+  marginTop: "8px",
 };
 
 const actionButton = {
   padding: "16px 24px",
-  background: "#333",
+  background: "#b3541e",
   color: "white",
-  borderRadius: "8px",
+  borderRadius: "10px",
   textDecoration: "none",
   fontSize: "18px",
   fontWeight: "bold",
   textAlign: "center",
-  minWidth: "220px",
+  minWidth: "230px",
+  transition: "0.2s",
 };

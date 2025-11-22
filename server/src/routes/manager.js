@@ -13,8 +13,8 @@ import {
 const router = express.Router();
 
 // everything requires auth + manager role
-router.use(verifyToken);
-router.use(allowRoles("manager"));
+// router.use(verifyToken);
+// router.use(allowRoles("manager"));
 
 router.get("/stats", getStats);
 router.get("/employees", getEmployees);

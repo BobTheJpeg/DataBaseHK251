@@ -25,11 +25,9 @@ export default function LoginPage() {
         return;
       }
 
-      // Save token + user info
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
 
-      // Redirect based on role
       switch (data.user.role) {
         case "server":
           navigate("/server");
@@ -57,40 +55,51 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ width: "350px", margin: "60px auto" }}>
-      <h2>Employee Login</h2>
+    <div className="page">
+      <div className="form" style={{ maxWidth: "380px" }}>
+        <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+          Employee Login
+        </h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && (
+          <p
+            style={{ color: "red", marginBottom: "15px", textAlign: "center" }}
+          >
+            {error}
+          </p>
+        )}
 
-      <form onSubmit={handleLogin}>
-        <div>
+        <form onSubmit={handleLogin}>
           <label>Email</label>
-          <br />
           <input
             type="email"
             value={email}
+            placeholder="Enter your email"
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: "100%", padding: "8px" }}
           />
-        </div>
 
-        <div style={{ marginTop: "10px" }}>
           <label>Password</label>
-          <br />
           <input
             type="password"
             value={password}
+            placeholder="Enter your password"
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: "100%", padding: "8px" }}
           />
-        </div>
 
-        <button style={{ marginTop: "15px", padding: "10px", width: "100%" }}>
-          Login
-        </button>
-      </form>
+          {/* Button */}
+          <button
+            className="btn"
+            style={{
+              width: "100%",
+              marginTop: "10px",
+            }}
+          >
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

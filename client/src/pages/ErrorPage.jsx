@@ -1,22 +1,8 @@
 import { useNavigate } from "react-router-dom";
-
-export default function AccessDenied() {
+export default function ErrorPage() {
   const navigate = useNavigate();
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
-  // Messages per role
-  const roleMessages = {
-    server: "You do not have permission to view this page.",
-    chef: "You do not have permission to view this page.",
-    head_chef: "You do not have permission to view this page.",
-    receptionist: "You do not have permission to view this page.",
-    storage_manager: "You do not have permission to view this page.",
-    undefined: "You do not have permission to view this page.",
-  };
-
-  const message = roleMessages[user.role] || roleMessages["undefined"];
-
-  // Redirect based on role
   const roleHomeRoutes = {
     server: "/server",
     chef: "/chef",
@@ -25,11 +11,9 @@ export default function AccessDenied() {
     storage_manager: "/storage",
     manager: "/manager",
   };
-
   const handleGoBack = () => {
     navigate(roleHomeRoutes[user.role] || "/");
   };
-
   return (
     <div className="page" style={{ textAlign: "center" }}>
       <div
@@ -39,11 +23,11 @@ export default function AccessDenied() {
           padding: "30px 25px",
         }}
       >
-        <h1 style={{ color: "#b3541e", marginBottom: "14px" }}>
-          Access Denied
+        <h1 style={{ color: "black", marginBottom: "14px" }}>
+          Page Does Not Exist!
         </h1>
 
-        <p style={{ marginBottom: "22px", color: "#3a3a3a" }}>{message}</p>
+        <p style={{ marginBottom: "22px", color: "#3a3a3a" }}></p>
 
         <button
           className="btn"
