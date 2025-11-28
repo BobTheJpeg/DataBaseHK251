@@ -4,40 +4,32 @@ import { pool, poolConnect } from "../db.js";
 
 /* ---------------- EMPLOYEES (NHANVIEN) ---------------- */
 
-// API thêm nhân viên sử dụng Stored Procedure
 export async function addEmployee(req, res) {
-  // Frontend cần gửi đủ các trường thông tin theo yêu cầu của DB mới
   const {
     cccd,
-    name, // HoTen
-    username, // Thay cho email cũ
+    name,
+    username,
     password,
-    dob, // NgaySinh
-    startDate, // NgayVaoLam
-    salary, // Luong
-    address, // DiaChi
-    role, // ChucDanh (Quản lý, Bếp trưởng...)
-    workType, // LoaiHinhLamViec (Fulltime/Parttime)
-    phone, // SDT_Chinh
-    supervisorId, // ID_GiamSat (nếu có)
-
-    // Các field phụ tùy chức danh
-    positionDate, // NgayNhanChuc
-    expertise, // ChuyenMon (Bếp)
-    shift, // CaLamViec (Phục vụ)
-    materialGroup, // NhomNguyenLieu (Kho)
-    language, // NgoaiNgu (Lễ tân)
+    dob,
+    startDate,
+    salary,
+    address,
+    role,
+    workType,
+    phone,
+    supervisorId,
+    positionDate,
+    expertise,
+    shift,
+    materialGroup,
+    language,
   } = req.body;
 
   try {
     await poolConnect;
-
-    // Hash password trước khi gửi vào DB
     const hash = await bcrypt.hash(password, 10);
-
     const request = pool.request();
 
-    // Mapping tham số cho Stored Procedure sp_ThemNhanVien
     request.input("CCCD", sql.VarChar(12), cccd);
     request.input("HoTen", sql.NVarChar(200), name);
     request.input("Username", sql.VarChar(50), username);
@@ -51,60 +43,41 @@ export async function addEmployee(req, res) {
     request.input("SDT_Chinh", sql.VarChar(20), phone);
     request.input("ID_GiamSat", sql.Int, supervisorId || null);
 
-    // Tham số Optional (tùy chức danh)
     request.input("NgayNhanChuc", sql.Date, positionDate || null);
     request.input("ChuyenMon", sql.NVarChar(50), expertise || null);
     request.input("CaLamViec", sql.NVarChar(20), shift || null);
     request.input("NhomNguyenLieu", sql.NVarChar(20), materialGroup || null);
     request.input("NgoaiNgu", sql.NVarChar(100), language || null);
 
-    // Gọi Stored Procedure
     const result = await request.execute("sp_ThemNhanVien");
+    const dbMessage =
+      result.recordset[0]?.Message || "Thêm nhân viên thành công";
 
-    // Trả về kết quả thành công
-    res.json({
-      success: true,
-      message: "Thêm nhân viên thành công",
-      data: result, // Có thể custom lại tùy ý
-    });
+    res.json({ success: true, message: dbMessage, data: result });
   } catch (err) {
-    // QUAN TRỌNG: Lỗi từ SQL Server (RAISERROR/THROW) sẽ nằm trong err.message
-    // Ví dụ: "Lỗi: Nhân viên phải từ 18 tuổi trở lên."
-    res.status(400).json({
-      success: false,
-      error: err.message, // Trả nguyên văn lỗi từ Database
-    });
+    console.error("Lỗi thêm nhân viên:", err.message);
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 
 export async function getEmployees(req, res) {
   try {
     await poolConnect;
-
-    // Select từ bảng NHANVIEN và join bảng con nếu cần (ở đây lấy cơ bản)
-    // Lưu ý: Không trả về Password và Luong (nếu nhạy cảm)
     const result = await pool.request().query(`
       SELECT 
-        ID as id, 
-        CCCD as cccd,
-        HoTen as name, 
-        Username as username, 
-        ChucDanh as role,
-        LoaiHinhLamViec as workType,
-        SDT as phone
+        N.ID as id, N.CCCD as cccd, N.HoTen as name, N.Username as username, 
+        N.ChucDanh as role, N.LoaiHinhLamViec as workType, S.SDT as phone
       FROM NHANVIEN N
-      LEFT JOIN SDT_NHANVIEN S ON N.ID = S.ID_NhanVien -- Lấy tạm 1 số đt
+      OUTER APPLY (SELECT TOP 1 SDT FROM SDT_NHANVIEN WHERE ID_NhanVien = N.ID) S
       WHERE N.NgayNghiViec IS NULL
       ORDER BY N.ID ASC
     `);
-
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
 
-// PUT /api/manager/update-employee/:id
 export async function updateEmployee(req, res) {
   const { id } = req.params;
   const {
@@ -118,7 +91,6 @@ export async function updateEmployee(req, res) {
     role,
     workType,
     supervisorId,
-    // Optional fields
     positionDate,
     expertise,
     shift,
@@ -131,8 +103,6 @@ export async function updateEmployee(req, res) {
     const request = pool.request();
 
     request.input("ID", sql.Int, id);
-
-    // Các tham số chung
     if (name) request.input("HoTen", sql.NVarChar(200), name);
     if (password) {
       const hash = await bcrypt.hash(password, 10);
@@ -145,10 +115,7 @@ export async function updateEmployee(req, res) {
     if (workType) request.input("LoaiHinhLamViec", sql.NVarChar(50), workType);
     if (supervisorId) request.input("ID_GiamSat", sql.Int, supervisorId);
 
-    // Tham số chức danh (Nếu đổi chức danh thì SP sẽ xử lý logic xóa bảng cũ thêm bảng mới)
     if (role) request.input("ChucDanhMoi", sql.NVarChar(50), role);
-
-    // Tham số riêng
     if (positionDate) request.input("NgayNhanChuc", sql.Date, positionDate);
     if (expertise) request.input("ChuyenMon", sql.NVarChar(50), expertise);
     if (shift) request.input("CaLamViec", sql.NVarChar(20), shift);
@@ -156,10 +123,10 @@ export async function updateEmployee(req, res) {
       request.input("NhomNguyenLieu", sql.NVarChar(20), materialGroup);
     if (language) request.input("NgoaiNgu", sql.NVarChar(100), language);
 
-    // Gọi Stored Procedure sp_CapNhatNhanVien
-    await request.execute("sp_CapNhatNhanVien");
+    const result = await request.execute("sp_CapNhatNhanVien");
+    const dbMessage = result.recordset[0]?.Message || "Cập nhật thành công";
 
-    res.json({ success: true, message: "Cập nhật nhân viên thành công" });
+    res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -169,97 +136,148 @@ export async function deleteEmployee(req, res) {
   const { id } = req.params;
   try {
     await poolConnect;
-    // Gọi SP xóa
-    await pool.request().input("ID", sql.Int, id).execute("sp_XoaNhanVien");
 
-    res.json({ success: true, message: "Đã xóa nhân viên" });
+    // [ĐÃ SỬA LỖI] Dùng biến 'result' (khác với 'res' của express)
+    const result = await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .execute("sp_XoaNhanVien");
+
+    const dbMessage = result.recordset[0]?.Message || "Đã xóa nhân viên";
+
+    res.json({ success: true, message: dbMessage });
+  } catch (err) {
+    console.error("Lỗi xóa nhân viên:", err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+/* ---------------- PHONE NUMBERS ---------------- */
+
+export async function getEmployeePhones(req, res) {
+  const { id } = req.params;
+  try {
+    await poolConnect;
+    const result = await pool
+      .request()
+      .input("ID", sql.Int, id)
+      .query("SELECT SDT FROM SDT_NHANVIEN WHERE ID_NhanVien = @ID");
+    res.json(result.recordset.map((r) => r.SDT));
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+}
+
+export async function addEmployeePhone(req, res) {
+  const { employeeId, phone } = req.body;
+  try {
+    await poolConnect;
+    const result = await pool
+      .request()
+      .input("ID_NhanVien", sql.Int, employeeId)
+      .input("SDT_Phu", sql.VarChar(20), phone)
+      .execute("sp_ThemSDT_Phu");
+
+    const dbMessage = result.recordset[0]?.Message || "Đã thêm SĐT";
+    res.json({ success: true, message: dbMessage });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+export async function deleteEmployeePhone(req, res) {
+  const { employeeId, phone } = req.body;
+  try {
+    await poolConnect;
+    // [ĐÃ SỬA LỖI] Dùng 'result' để tránh trùng tên và truy cập được recordset
+    const result = await pool
+      .request()
+      .input("ID_NhanVien", sql.Int, employeeId)
+      .input("SDT_Phu", sql.VarChar(20), phone)
+      .execute("sp_XoaSDT_Phu");
+
+    const dbMessage = result.recordset[0]?.Message || "Đã xóa SĐT";
+    res.json({ success: true, message: dbMessage });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 }
 
 /* ---------------- MENU (MONAN) ---------------- */
 
 export async function addMenuItem(req, res) {
-  const { name, price, category, description, unit } = req.body;
-
+  const { name, price, category, description } = req.body;
   try {
     await poolConnect;
-
-    // Tương tác với bảng MONAN
-    // Chưa tạo sp_ThemMonAn, ta dùng query trực tiếp nhưng theo schema mới
     const result = await pool
       .request()
       .input("Ten", sql.NVarChar(100), name)
       .input("DonGia", sql.Decimal(12, 0), price)
-      .input("PhanLoai", sql.NVarChar(10), category) // Chay/Mặn
-      .input("MoTa", sql.NVarChar(500), description || "").query(`
-        INSERT INTO MONAN (Ten, DonGia, PhanLoai, MoTa, DangPhucVu, DangKinhDoanh)
-        VALUES (@Ten, @DonGia, @PhanLoai, @MoTa, 1, 1);
-        
-        SELECT SCOPE_IDENTITY() AS id, @Ten AS name, @DonGia AS price, @PhanLoai AS category;
-      `);
+      .input("PhanLoai", sql.NVarChar(10), category)
+      .input("MoTa", sql.NVarChar(500), description || "")
+      .input("DangPhucVu", sql.Bit, 1)
+      .input("DangKinhDoanh", sql.Bit, 1)
+      .execute("sp_ThemMonAn");
 
-    res.json(result.recordset[0]);
+    const dbMessage = result.recordset[0]?.Message || "Thêm món thành công";
+    res.json({
+      success: true,
+      message: dbMessage,
+      id: result.recordset[0]?.ID,
+    });
   } catch (err) {
-    // Bắt lỗi Unique Key (Trùng tên món) từ DB
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 
 export async function getMenuItems(req, res) {
   try {
     await poolConnect;
-
     const result = await pool
       .request()
       .query("SELECT * FROM MONAN WHERE DangKinhDoanh = 1 ORDER BY ID ASC");
-
     res.json(result.recordset);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch {
+    res.status(500).json({ error: "Lỗi tải danh sách món ăn" });
   }
 }
 
-// PUT /api/manager/update-menu-item/:id
 export async function updateMenuItem(req, res) {
   const { id } = req.params;
-  const { name, price, category, description } = req.body;
-
+  const { name, price, category, description, isServing } = req.body;
   try {
     await poolConnect;
-    await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .input("Ten", sql.NVarChar(100), name)
-      .input("DonGia", sql.Decimal(12, 0), price)
-      .input("PhanLoai", sql.NVarChar(10), category)
-      .input("MoTa", sql.NVarChar(500), description).query(`
-        UPDATE MONAN 
-        SET Ten = @Ten, DonGia = @DonGia, PhanLoai = @PhanLoai, MoTa = @MoTa
-        WHERE ID = @ID
-      `);
+    const request = pool.request();
+    request.input("ID", sql.Int, id);
+    if (name) request.input("Ten", sql.NVarChar(100), name);
+    if (price) request.input("DonGia", sql.Decimal(12, 0), price);
+    if (category) request.input("PhanLoai", sql.NVarChar(10), category);
+    if (description !== undefined)
+      request.input("MoTa", sql.NVarChar(500), description);
+    if (isServing !== undefined)
+      request.input("DangPhucVu", sql.Bit, isServing);
 
-    res.json({ success: true });
+    const result = await request.execute("sp_CapNhatMonAn");
+    const dbMessage = result.recordset[0]?.Message || "Cập nhật thành công";
+    res.json({ success: true, message: dbMessage });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 
-// DELETE /api/manager/delete-menu-item/:id
 export async function deleteMenuItem(req, res) {
   const { id } = req.params;
   try {
     await poolConnect;
-    // Thay vì xóa vĩnh viễn (mất lịch sử order), ta set DangKinhDoanh = 0 (Ẩn khỏi menu)
-    await pool
+    const result = await pool
       .request()
       .input("ID", sql.Int, id)
-      .query("UPDATE MONAN SET DangKinhDoanh = 0 WHERE ID = @ID");
+      .execute("sp_XoaMonAn");
 
-    res.json({ success: true, message: "Đã xóa món ăn khỏi thực đơn" });
+    const dbMessage = result.recordset[0]?.Message || "Đã xóa món ăn";
+    res.json({ success: true, message: dbMessage });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 
@@ -268,28 +286,21 @@ export async function deleteMenuItem(req, res) {
 export async function getStats(req, res) {
   try {
     await poolConnect;
-
-    // 1. Doanh thu hôm nay: Tính từ bảng THANHTOAN
-    const revenueQuery = await pool.request().query(`
-      SELECT COALESCE(SUM(ThanhTien), 0) AS revenue
-      FROM THANHTOAN
-      WHERE CAST(ThoiGianThanhToan AS DATE) = CAST(GETDATE() AS DATE);
-    `);
-
-    // 2. Số đơn gọi món hôm nay: Tính từ bảng DONGOIMON
-    const ordersQuery = await pool.request().query(`
-      SELECT COUNT(*) AS count
-      FROM DONGOIMON
-      WHERE CAST(ThoiGianTao AS DATE) = CAST(GETDATE() AS DATE);
-    `);
-
-    // 3. Số khách hôm nay: Tính từ bảng DATBAN (hoặc ước tính)
-    const customersQuery = await pool.request().query(`
-      SELECT COALESCE(SUM(SoLuongKhach), 0) AS customers
-      FROM DATBAN
-      WHERE CAST(ThoiGianDat AS DATE) = CAST(GETDATE() AS DATE)
-      AND TrangThai != N'Đã hủy';
-    `);
+    const revenueQuery = await pool
+      .request()
+      .query(
+        `SELECT COALESCE(SUM(ThanhTien), 0) AS revenue FROM THANHTOAN WHERE CAST(ThoiGianThanhToan AS DATE) = CAST(GETDATE() AS DATE);`
+      );
+    const ordersQuery = await pool
+      .request()
+      .query(
+        `SELECT COUNT(*) AS count FROM DONGOIMON WHERE CAST(ThoiGianTao AS DATE) = CAST(GETDATE() AS DATE);`
+      );
+    const customersQuery = await pool
+      .request()
+      .query(
+        `SELECT COALESCE(SUM(SoLuongKhach), 0) AS customers FROM DATBAN WHERE CAST(ThoiGianDat AS DATE) = CAST(GETDATE() AS DATE) AND TrangThai != N'Đã hủy';`
+      );
 
     res.json({
       revenueToday: revenueQuery.recordset[0].revenue,

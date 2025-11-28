@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import DashboardLayout from "../../components/DashboardLayout";
+import DashboardLayout from "../../components/DashboardLayout.jsx";
 
 export default function ManageMenu() {
   const [menu, setMenu] = useState([]);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [editing, setEditing] = useState(null);
@@ -15,6 +16,17 @@ export default function ManageMenu() {
     description: "",
   });
 
+  // Tự động ẩn thông báo sau 5s
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccess("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
   // Load all menu items
   async function loadMenu() {
     try {
@@ -25,12 +37,13 @@ export default function ManageMenu() {
         },
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        setError("Không thể tải thực đơn");
+        setError(data.error || "Không thể tải thực đơn");
         return;
       }
 
-      const data = await res.json();
       setMenu(data);
     } catch {
       setError("Lỗi máy chủ");
@@ -47,9 +60,10 @@ export default function ManageMenu() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     const url = editing
-      ? `http://localhost:3000/api/manager/update-menu-item/${editing.id}` // Cần đảm bảo backend có
+      ? `http://localhost:3000/api/manager/update-menu-item/${editing.id}`
       : "http://localhost:3000/api/manager/add-menu-item";
 
     const method = editing ? "PUT" : "POST";
@@ -67,17 +81,26 @@ export default function ManageMenu() {
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.error || "Lỗi khi lưu món ăn");
+        setError(data.error || "Lỗi khi lưu món ăn");
+        window.scrollTo(0, 0);
         return;
       }
 
+      setSuccess(
+        data.message ||
+          (editing ? "Cập nhật thành công!" : "Thêm món thành công!")
+      );
       await loadMenu();
 
-      // RESET Form
-      setForm({ name: "", price: "", category: "Mặn", description: "" });
+      // Chỉ reset form khi thêm mới
+      if (!editing) {
+        setForm({ name: "", price: "", category: "Mặn", description: "" });
+      }
       setEditing(null);
+      window.scrollTo(0, 0);
     } catch {
       setError("Lỗi kết nối");
     }
@@ -87,14 +110,29 @@ export default function ManageMenu() {
   async function deleteItem(id) {
     if (!confirm("Bạn có chắc muốn xóa món này?")) return;
 
-    await fetch(`http://localhost:3000/api/manager/delete-menu-item/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + sessionStorage.getItem("token"),
-      },
-    });
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/manager/delete-menu-item/${id}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("token"),
+          },
+        }
+      );
 
-    loadMenu();
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Không thể xóa món ăn");
+        return;
+      }
+
+      setSuccess(data.message || "Đã xóa món ăn");
+      loadMenu();
+    } catch {
+      setError("Lỗi kết nối");
+    }
   }
 
   return (
@@ -103,11 +141,20 @@ export default function ManageMenu() {
         Quản Lý Thực Đơn
       </h2>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* Thông báo Lỗi / Thành công */}
+      {error && <div style={styles.errorMsg}>⚠️ {error}</div>}
+      {success && <div style={styles.successMsg}>✅ {success}</div>}
 
-      <div style={{ display: "flex", gap: "30px" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "30px",
+          flexDirection: "row",
+          flexWrap: "wrap",
+        }}
+      >
         {/* LEFT: MENU TABLE */}
-        <div style={{ flex: 2 }}>
+        <div style={{ flex: 2, minWidth: "60%" }}>
           <div className="table-wrapper">
             <table className="table">
               <thead>
@@ -124,7 +171,12 @@ export default function ManageMenu() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="4">Đang tải...</td>
+                    <td
+                      colSpan="4"
+                      style={{ textAlign: "center", padding: "20px" }}
+                    >
+                      Đang tải...
+                    </td>
                   </tr>
                 ) : (
                   menu.map((item) => (
@@ -137,10 +189,14 @@ export default function ManageMenu() {
                         }).format(item.DonGia || item.price)}
                       </td>
                       <td>{item.PhanLoai || item.category}</td>
-                      <td>
+                      <td style={{ textAlign: "center" }}>
                         <button
                           className="btn"
-                          style={{ marginRight: "10px", padding: "5px 10px" }}
+                          style={{
+                            marginRight: "10px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                          }}
                           onClick={() => {
                             setEditing(item);
                             setForm({
@@ -149,6 +205,9 @@ export default function ManageMenu() {
                               category: item.PhanLoai || item.category,
                               description: item.MoTa || item.description || "",
                             });
+                            setError("");
+                            setSuccess("");
+                            window.scrollTo(0, 0);
                           }}
                         >
                           Sửa
@@ -159,6 +218,7 @@ export default function ManageMenu() {
                           style={{
                             background: "#c62828",
                             padding: "5px 10px",
+                            fontSize: "12px",
                           }}
                           onClick={() => deleteItem(item.ID || item.id)}
                         >
@@ -174,58 +234,87 @@ export default function ManageMenu() {
         </div>
 
         {/* RIGHT: MENU FORM */}
-        <div className="form" style={{ flex: 1 }}>
-          <h3>{editing ? "Sửa Món Ăn" : "Thêm Món Mới"}</h3>
+        <div className="form" style={{ flex: 1, minWidth: "300px" }}>
+          <h3
+            style={{
+              borderBottom: "2px solid #b3541e",
+              paddingBottom: "10px",
+              marginBottom: "15px",
+              color: "#5a381e",
+            }}
+          >
+            {editing ? "✏️ Sửa Món Ăn" : "➕ Thêm Món Mới"}
+          </h3>
 
-          <form onSubmit={handleSubmit}>
-            <label>Tên món</label>
-            <input
-              placeholder="Ví dụ: Phở bò"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-            />
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <div>
+              <label style={styles.label}>Tên món *</label>
+              <input
+                placeholder="Ví dụ: Phở bò"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                style={styles.input}
+              />
+            </div>
 
-            <label>Đơn giá (VNĐ)</label>
-            <input
-              placeholder="0"
-              type="number"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              required
-              min="0"
-            />
+            <div>
+              <label style={styles.label}>Đơn giá (VNĐ) *</label>
+              <input
+                placeholder="0"
+                type="number"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                required
+                min="0"
+                style={styles.input}
+              />
+            </div>
 
-            <label>Phân loại</label>
-            <select
-              value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
-            >
-              <option value="Mặn">Mặn</option>
-              <option value="Chay">Chay</option>
-            </select>
+            <div>
+              <label style={styles.label}>Phân loại</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                style={styles.input}
+              >
+                <option value="Mặn">Mặn</option>
+                <option value="Chay">Chay</option>
+              </select>
+            </div>
 
-            <label>Mô tả (Nguyên liệu/Ghi chú)</label>
-            <textarea
-              placeholder="Ví dụ: Nạm, gầu, gân..."
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              style={{
-                width: "100%",
-                padding: "10px",
-                marginBottom: "10px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-              }}
-              rows={3}
-            />
+            <div>
+              <label style={styles.label}>Mô tả (Nguyên liệu/Ghi chú)</label>
+              <textarea
+                placeholder="Ví dụ: Nạm, gầu, gân..."
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  fontSize: "14px",
+                  fontFamily: "inherit",
+                }}
+                rows={3}
+              />
+            </div>
 
             {/* SAVE BUTTON */}
             <button
               className="btn"
-              style={{ width: "100%", marginTop: "10px" }}
+              style={{
+                width: "100%",
+                marginTop: "10px",
+                padding: "12px",
+                fontSize: "16px",
+              }}
             >
               {editing ? "Lưu Thay Đổi" : "Thêm Món"}
             </button>
@@ -237,7 +326,7 @@ export default function ManageMenu() {
                 className="btn"
                 style={{
                   width: "100%",
-                  marginTop: "10px",
+                  marginTop: "5px",
                   background: "#7a4d28",
                 }}
                 onClick={() => {
@@ -248,6 +337,8 @@ export default function ManageMenu() {
                     category: "Mặn",
                     description: "",
                   });
+                  setError("");
+                  setSuccess("");
                 }}
               >
                 Hủy Bỏ
@@ -259,3 +350,38 @@ export default function ManageMenu() {
     </DashboardLayout>
   );
 }
+
+const styles = {
+  label: {
+    fontSize: "12px",
+    fontWeight: "bold",
+    marginBottom: "4px",
+    display: "block",
+    color: "#555",
+  },
+  input: {
+    width: "100%",
+    padding: "8px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    fontSize: "14px",
+  },
+  errorMsg: {
+    backgroundColor: "#ffebee",
+    color: "#c62828",
+    padding: "15px",
+    marginBottom: "20px",
+    borderRadius: "8px",
+    border: "1px solid #ef9a9a",
+    fontWeight: "bold",
+  },
+  successMsg: {
+    backgroundColor: "#e8f5e9",
+    color: "#2e7d32",
+    padding: "15px",
+    marginBottom: "20px",
+    borderRadius: "8px",
+    border: "1px solid #a5d6a7",
+    fontWeight: "bold",
+  },
+};
