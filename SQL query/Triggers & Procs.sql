@@ -17,6 +17,7 @@ BEGIN
         BEGIN
             RAISERROR (N'Lỗi nghiệp vụ: Tại một thời điểm chỉ được phép có 1 Quản Lý đang tại chức.', 16, 1);
             ROLLBACK TRANSACTION;
+            RETURN;
         END
     END
 END;
@@ -36,6 +37,7 @@ BEGIN
         BEGIN
             RAISERROR (N'Lỗi nghiệp vụ: Tại một thời điểm chỉ được phép có 1 Bếp Trưởng đang tại chức.', 16, 1);
             ROLLBACK TRANSACTION;
+            RETURN;
         END
     END
 END;
@@ -183,7 +185,8 @@ BEGIN
         -- Hoàn tất
         COMMIT TRANSACTION;
         PRINT N'Thêm nhân viên thành công! Mã nhân viên mới: ' + CAST(@NewID AS NVARCHAR(20));
-
+        -- Lấy thông báo để in trong backend
+        SELECT N'Thêm nhân viên thành công! Mã NV: ' + CAST(@NewID AS NVARCHAR(20)) AS Message;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -332,6 +335,8 @@ BEGIN
 
         COMMIT TRANSACTION;
         PRINT N'Cập nhật thông tin thành công!';
+        -- Thêm để lấy về backend
+        SELECT N'Cập nhật thông tin nhân viên ' + CAST(@ID AS NVARCHAR(20)) + N' thành công.' AS Message;
 
     END TRY
     BEGIN CATCH
@@ -388,7 +393,8 @@ BEGIN
 
         COMMIT TRANSACTION;
         PRINT N'Đã thực hiện xóa mềm (cho nghỉ việc) nhân viên thành công.';
-
+        -- Thêm để backend lấy
+        SELECT N'Đã cho nhân viên ' + CAST(@ID AS NVARCHAR(20)) + N' nghỉ việc thành công.' AS Message;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -426,6 +432,8 @@ BEGIN
         
         COMMIT TRANSACTION;
         PRINT N'Đã thêm số điện thoại phụ (' + @SDT_Phu + N') thành công cho nhân viên ID ' + CAST(@ID_NhanVien AS NVARCHAR(20));
+        -- Cho backend
+        SELECT N'Đã thêm số ' + @SDT_Phu + N' vào danh sách liên lạc.' AS Message;
         
     END TRY
     BEGIN CATCH
@@ -459,6 +467,8 @@ BEGIN
         
         COMMIT TRANSACTION;
         PRINT N'Đã xóa số điện thoại phụ (' + @SDT_Phu + N') thành công.';
+        -- Cho backend
+        SELECT N'Đã xóa số ' + @SDT_Phu + N' khỏi danh sách.' AS Message;
 
     END TRY
     BEGIN CATCH
