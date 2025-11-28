@@ -9,6 +9,9 @@ import {
   deleteEmployee,
   deleteMenuItem,
   updateMenuItem,
+  getEmployeePhones,
+  addEmployeePhone,
+  deleteEmployeePhone,
 } from "../controllers/managerController.js";
 
 const router = express.Router();
@@ -17,11 +20,13 @@ router.get("/stats", getStats);
 router.get("/employees", getEmployees);
 router.post("/add-employee", addEmployee);
 router.put("/update-employee/:id", updateEmployee);
-router.delete("/delete-employee/:id", deleteEmployee);
-
+router.post("/delete-employee/:id", deleteEmployee);
+router.get("/employee-phones/:id", getEmployeePhones);
+router.post("/add-phone", addEmployeePhone);
+router.post("/delete-phone", deleteEmployeePhone);
 router.get("/menu", getMenuItems);
 router.post("/add-menu-item", addMenuItem);
 router.put("/update-menu-item/:id", updateMenuItem);
-router.delete("/delete-menu-item/:id", deleteMenuItem);
+router.post("/delete-menu-item/:id", deleteMenuItem);
 
 export default router;
