@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -15,13 +15,15 @@ export default function LoginPage() {
       const res = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
 
+      console.log("Role nhận được từ API:", data.user.role);
+
       if (!res.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || "Đăng nhập thất bại");
         return;
       }
 
@@ -29,28 +31,29 @@ export default function LoginPage() {
       sessionStorage.setItem("user", JSON.stringify(data.user));
 
       switch (data.user.role) {
-        case "server":
+        case "Phục vụ":
           navigate("/server");
           break;
-        case "chef":
-        case "head_chef":
+        case "Đầu bếp":
+        case "Bếp trưởng":
           navigate("/chef");
           break;
-        case "receptionist":
+        case "Lễ tân":
           navigate("/reception");
           break;
-        case "manager":
+        case "Quản lý":
           navigate("/manager");
           break;
-        case "storage_manager":
+        case "Quản lý kho":
           navigate("/storage");
           break;
         default:
+          setError("Tài khoản của bạn chưa được phân quyền truy cập");
           navigate("/login");
       }
     } catch (err) {
       console.error(err);
-      setError("Network error");
+      setError("Lỗi kết nối máy chủ");
     }
   }
 
@@ -58,7 +61,7 @@ export default function LoginPage() {
     <div className="page">
       <div className="form" style={{ maxWidth: "380px" }}>
         <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
-          Employee Login
+          Đăng Nhập Nhân Viên
         </h1>
 
         {error && (
@@ -70,20 +73,20 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleLogin}>
-          <label>Email</label>
+          <label>Tên đăng nhập</label>
           <input
-            type="email"
-            value={email}
-            placeholder="Enter your email"
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={username}
+            placeholder="Nhập tên đăng nhập"
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
 
-          <label>Password</label>
+          <label>Mật khẩu</label>
           <input
             type="password"
             value={password}
-            placeholder="Enter your password"
+            placeholder="Nhập mật khẩu"
             onChange={(e) => setPassword(e.target.value)}
             required
           />
@@ -96,7 +99,7 @@ export default function LoginPage() {
               marginTop: "10px",
             }}
           >
-            Login
+            Đăng nhập
           </button>
         </form>
       </div>

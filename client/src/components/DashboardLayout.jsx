@@ -4,61 +4,71 @@ import LogoutButton from "./LogoutButton";
 export default function DashboardLayout({ children }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
+  // Hàm helper để kiểm tra role an toàn
+  const hasRole = (...roles) => roles.includes(user.role);
+
   return (
     <div style={styles.layout}>
       {/* SIDEBAR */}
       <aside style={styles.sidebar}>
-        <h2 style={styles.role}>{user.role?.toUpperCase()}</h2>
+        {/* Hiển thị chức danh viết hoa */}
+        <h2 style={styles.role}>{user.role?.toUpperCase() || "NHÂN VIÊN"}</h2>
 
-        {/* Role-Based Links */}
-        {user.role === "manager" && (
+        {/* Role-Based Links: Khớp với Tiếng Việt trong Database */}
+
+        {/* --- QUẢN LÝ --- */}
+        {hasRole("Quản lý") && (
           <>
             <Link style={styles.link} to="/manager">
-              Dashboard
+              Bảng Điều Khiển
             </Link>
             <Link style={styles.link} to="/manager/employees">
-              Employees
+              Quản lý nhân viên
             </Link>
             <Link style={styles.link} to="/manager/menu">
-              Menu
+              Quản Lý Thực Đơn
             </Link>
             <Link style={styles.link} to="/manager/reports">
-              Reports
+              Báo Cáo
             </Link>
           </>
         )}
 
-        {user.role === "server" && (
+        {/* --- PHỤC VỤ --- */}
+        {hasRole("Phục vụ") && (
           <>
             <Link style={styles.link} to="/server">
-              Orders
+              Gọi Món (Order)
             </Link>
             <Link style={styles.link} to="/server/tables">
-              Tables
+              Sơ Đồ Bàn
             </Link>
           </>
         )}
 
-        {(user.role === "chef" || user.role === "head_chef") && (
+        {/* --- BẾP (Bếp trưởng & Đầu bếp) --- */}
+        {hasRole("Đầu bếp", "Bếp trưởng") && (
           <Link style={styles.link} to="/chef">
-            Kitchen Queue
+            Hàng Đợi Bếp
           </Link>
         )}
 
-        {user.role === "receptionist" && (
+        {/* --- LỄ TÂN --- */}
+        {hasRole("Lễ tân") && (
           <>
             <Link style={styles.link} to="/reception">
-              Table Booking
+              Đặt Bàn & Check-in
             </Link>
             <Link style={styles.link} to="/reception/payments">
-              Payments
+              💳 Thanh toán
             </Link>
           </>
         )}
 
-        {user.role === "storage_manager" && (
+        {/* --- QUẢN LÝ KHO --- */}
+        {hasRole("Quản lý kho") && (
           <Link style={styles.link} to="/storage">
-            Inventory
+            📦 Kho hàng (Inventory)
           </Link>
         )}
 
@@ -70,7 +80,10 @@ export default function DashboardLayout({ children }) {
       {/* MAIN CONTENT */}
       <main style={styles.main}>
         <div style={styles.topbar}>
-          <h1>{user.name}</h1>
+          {/* Hiển thị lời chào với tên nhân viên */}
+          <h1 style={{ fontSize: "1.5rem", color: "#333" }}>
+            Xin chào, <span style={{ color: "#b3541e" }}>{user.name}</span>
+          </h1>
         </div>
 
         {children}
@@ -78,7 +91,6 @@ export default function DashboardLayout({ children }) {
     </div>
   );
 }
-
 /* ========================= */
 /* INLINE STYLING OBJECT     */
 /* ========================= */

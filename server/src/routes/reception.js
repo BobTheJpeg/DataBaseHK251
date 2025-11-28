@@ -7,14 +7,16 @@ import {
   getBookings,
   createBooking,
   updateTableStatus,
+  updateBooking,
+  deleteBooking,
 } from "../controllers/receptionController.js";
 
 const router = express.Router();
-// router.use(verifyToken);
-// router.use(allowRoles("receptionist"));
 
 router.get("/tables", getTables);
 router.get("/bookings", getBookings);
+router.put("/book/:id", updateBooking);
+router.delete("/book/:id", deleteBooking);
 router.post("/book", createBooking);
 router.post("/table-status", updateTableStatus);
 

@@ -11,69 +11,77 @@ import { ManageEmployees, ManagerHome, ManageMenu } from "./pages/manager/";
 import AccessDenied from "./pages/AccessDenied";
 import ErrorPage from "./pages/ErrorPage.jsx";
 
+// Component bảo vệ route: Kiểm tra role của user
 function ProtectedRoute({ children, roles }) {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+
+  // Chưa đăng nhập -> Về trang login
   if (!user.role) return <Navigate to="/login" />;
+
+  // Role không nằm trong danh sách cho phép -> Về trang từ chối truy cập
   if (!roles.includes(user.role)) return <Navigate to="/access-denied" />;
+
   return children;
 }
 
 export default function App() {
   return (
     <Routes>
-      {/* Public Pages */}
+      {/* Các trang Public */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/error" element={<ErrorPage />} />
 
-      {/* Wrong Role */}
+      {/* Trang thông báo lỗi quyền hạn */}
       <Route path="/access-denied" element={<AccessDenied />} />
 
-      {/* Server Dashboard */}
+      {/* ------------------ PHÂN QUYỀN (ROLE-BASED ROUTING) ------------------ */}
+
+      {/* 1. Trang Phục vụ (Server) */}
       <Route
         path="/server"
         element={
-          <ProtectedRoute roles={["server"]}>
+          <ProtectedRoute roles={["Phục vụ"]}>
             <ServerDashboard />
           </ProtectedRoute>
         }
       />
 
-      {/* Chef Dashboard */}
+      {/* 2. Trang Bếp (Chef) - Bao gồm cả Bếp trưởng và Đầu bếp */}
       <Route
         path="/chef"
         element={
-          <ProtectedRoute roles={["chef", "head_chef"]}>
+          <ProtectedRoute roles={["Đầu bếp", "Bếp trưởng"]}>
             <ChefDashboard />
           </ProtectedRoute>
         }
       />
 
-      {/* Receptionist Dashboard */}
+      {/* 3. Trang Lễ tân (Receptionist) */}
       <Route
         path="/reception"
         element={
-          <ProtectedRoute roles={["receptionist"]}>
+          <ProtectedRoute roles={["Lễ tân"]}>
             <ReceptionDashboard />
           </ProtectedRoute>
         }
       />
 
-      {/* Storage Manager Dashboard */}
+      {/* 4. Trang Kho (Storage) */}
       <Route
         path="/storage"
         element={
-          <ProtectedRoute roles={["storage_manager"]}>
+          <ProtectedRoute roles={["Quản lý kho"]}>
             <StorageDashboard />
           </ProtectedRoute>
         }
       />
 
-      {/* ---------------------- MANAGER ROUTES ---------------------- */}
+      {/* 5. Trang Quản lý (Manager) */}
       <Route
         path="/manager"
         element={
-          <ProtectedRoute roles={["manager"]}>
+          <ProtectedRoute roles={["Quản lý"]}>
             <ManagerHome />
           </ProtectedRoute>
         }
@@ -82,7 +90,7 @@ export default function App() {
       <Route
         path="/manager/employees"
         element={
-          <ProtectedRoute roles={["manager"]}>
+          <ProtectedRoute roles={["Quản lý"]}>
             <ManageEmployees />
           </ProtectedRoute>
         }
@@ -91,14 +99,15 @@ export default function App() {
       <Route
         path="/manager/menu"
         element={
-          <ProtectedRoute roles={["manager"]}>
+          <ProtectedRoute roles={["Quản lý"]}>
             <ManageMenu />
           </ProtectedRoute>
         }
       />
-      {/* -------------------------------------------------------------- */}
 
-      {/* Fallback */}
+      {/* --------------------------------------------------------------------- */}
+
+      {/* Fallback: Route không tồn tại -> Chuyển hướng về trang lỗi */}
       <Route path="*" element={<Navigate to="/error" />} />
     </Routes>
   );

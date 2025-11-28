@@ -46,6 +46,10 @@ CREATE PROCEDURE sp_ThemNhanVien
     -- THÔNG TIN CƠ BẢN (Bắt buộc)
     @CCCD               VARCHAR(12),
     @HoTen              NVARCHAR(200),
+
+    @Username           VARCHAR(50),
+    @Password           VARCHAR(255),
+
     @NgaySinh           DATE,
     @NgayVaoLam         DATE,
     @Luong              DECIMAL(12,2),
@@ -79,6 +83,9 @@ BEGIN
         -- 2. Validate SĐT (Định dạng)
         IF LEN(@SDT_Chinh) < 10 OR @SDT_Chinh LIKE '%[^0-9]%'
             THROW 50002, N'Lỗi: Số điện thoại không hợp lệ.', 1;
+
+        IF EXISTS (SELECT 1 FROM NHANVIEN WHERE Username = @Username)
+        THROW 50013, N'Lỗi: Tên đăng nhập (Username) này đã được sử dụng.', 1;
         
         -- 3. Validate Trùng SĐT (Trong bảng SDT)
         IF EXISTS (SELECT 1 FROM SDT_NHANVIEN WHERE SDT = @SDT_Chinh)
@@ -136,8 +143,8 @@ BEGIN
 
         -- BƯỚC 1: Insert Bảng Cha (NHANVIEN)
         DECLARE @NewID INT;
-        INSERT INTO NHANVIEN (CCCD, HoTen, NgaySinh, NgayVaoLam, Luong, DiaChi, ChucDanh, LoaiHinhLamViec, ID_GiamSat)
-        VALUES (@CCCD, @HoTen, @NgaySinh, @NgayVaoLam, @Luong, @DiaChi, @ChucDanh, @LoaiHinhLamViec, @ID_GiamSat);
+        INSERT INTO NHANVIEN (CCCD, HoTen, Username, Password, NgaySinh, NgayVaoLam, Luong, DiaChi, ChucDanh, LoaiHinhLamViec, ID_GiamSat)
+        VALUES (@CCCD, @HoTen,@Username,@Password, @NgaySinh, @NgayVaoLam, @Luong, @DiaChi, @ChucDanh, @LoaiHinhLamViec, @ID_GiamSat);
 
         SET @NewID = SCOPE_IDENTITY();
 
@@ -202,6 +209,7 @@ CREATE PROCEDURE sp_CapNhatNhanVien
 
     -- THÔNG TIN RIÊNG (Dùng để update hoặc cung cấp cho chức danh mới)
     @NgayNhanChuc       DATE = NULL,
+    @Password           VARCHAR(255) = NULL,
     @ChuyenMon          NVARCHAR(50) = NULL,
     @CaLamViec          NVARCHAR(20) = NULL,
     @NhomNguyenLieu     NVARCHAR(20) = NULL,

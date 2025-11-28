@@ -2,7 +2,11 @@
 
 CREATE TABLE NHANVIEN (
     ID              INT IDENTITY(1,1)       PRIMARY KEY, -- Xử lý format khác trên BE
-    CCCD            VARCHAR(12)             NOT NULL UNIQUE,   
+    CCCD            VARCHAR(12)             NOT NULL UNIQUE,
+
+    Username        VARCHAR(50)             NOT NULL UNIQUE,
+    Password        VARCHAR(255)            NOT NULL,
+
     HoTen           NVARCHAR(200)           NOT NULL,
     NgaySinh        DATE                    NOT NULL,
     NgayVaoLam      DATE                    NOT NULL DEFAULT GETDATE(),

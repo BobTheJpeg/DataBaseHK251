@@ -4,26 +4,13 @@ export default function AccessDenied() {
   const navigate = useNavigate();
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
-  // Messages per role
-  const roleMessages = {
-    server: "You do not have permission to view this page.",
-    chef: "You do not have permission to view this page.",
-    head_chef: "You do not have permission to view this page.",
-    receptionist: "You do not have permission to view this page.",
-    storage_manager: "You do not have permission to view this page.",
-    undefined: "You do not have permission to view this page.",
-  };
-
-  const message = roleMessages[user.role] || roleMessages["undefined"];
-
-  // Redirect based on role
   const roleHomeRoutes = {
-    server: "/server",
-    chef: "/chef",
-    head_chef: "/chef",
-    receptionist: "/reception",
-    storage_manager: "/storage",
-    manager: "/manager",
+    "Phục vụ": "/server",
+    "Đầu bếp": "/chef",
+    "Bếp trưởng": "/chef",
+    "Lễ tân": "/reception",
+    "Quản lý kho": "/storage",
+    "Quản lý": "/manager",
   };
 
   const handleGoBack = () => {
@@ -40,17 +27,20 @@ export default function AccessDenied() {
         }}
       >
         <h1 style={{ color: "#b3541e", marginBottom: "14px" }}>
-          Access Denied
+          Truy cập bị từ chối
         </h1>
 
-        <p style={{ marginBottom: "22px", color: "#3a3a3a" }}>{message}</p>
+        <p style={{ marginBottom: "22px", color: "#3a3a3a" }}>
+          Bạn không có quyền truy cập vào trang này. Vui lòng liên hệ quản lý
+          nếu bạn cho rằng đây là lỗi.
+        </p>
 
         <button
           className="btn"
           style={{ width: "100%" }}
           onClick={handleGoBack}
         >
-          Go back to your dashboard
+          Quay lại bảng điều khiển
         </button>
       </div>
     </div>

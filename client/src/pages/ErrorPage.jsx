@@ -4,12 +4,12 @@ export default function ErrorPage() {
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
   const roleHomeRoutes = {
-    server: "/server",
-    chef: "/chef",
-    head_chef: "/chef",
-    receptionist: "/reception",
-    storage_manager: "/storage",
-    manager: "/manager",
+    "Phục vụ": "/server",
+    "Đầu bếp": "/chef",
+    "Bếp trưởng": "/chef",
+    "Lễ tân": "/reception",
+    "Quản lý kho": "/storage",
+    "Quản lý": "/manager",
   };
   const handleGoBack = () => {
     navigate(roleHomeRoutes[user.role] || "/");
@@ -24,17 +24,19 @@ export default function ErrorPage() {
         }}
       >
         <h1 style={{ color: "black", marginBottom: "14px" }}>
-          Page Does Not Exist!
+          Trang không tồn tại!
         </h1>
 
-        <p style={{ marginBottom: "22px", color: "#3a3a3a" }}></p>
+        <p style={{ marginBottom: "22px", color: "#3a3a3a" }}>
+          Đường dẫn bạn truy cập không đúng hoặc đã bị xóa.
+        </p>
 
         <button
           className="btn"
           style={{ width: "100%" }}
           onClick={handleGoBack}
         >
-          Go back to your dashboard
+          Quay lại bảng điều khiển
         </button>
       </div>
     </div>

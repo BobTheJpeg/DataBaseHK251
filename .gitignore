@@ -35,3 +35,4 @@ client/.next/
 
 # Backend temp
 server/tmp/
+SQL query/.vs

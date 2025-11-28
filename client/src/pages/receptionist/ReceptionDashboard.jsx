@@ -8,6 +8,8 @@ export default function ReceptionDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [errors, setErrors] = useState({});
   const [editingBooking, setEditingBooking] = useState(null);
+
+  // Form state giữ nguyên key để map với req.body của API
   const [form, setForm] = useState({
     guest_name: "",
     phone: "",
@@ -15,14 +17,29 @@ export default function ReceptionDashboard() {
     booking_time: "",
   });
 
-  function loadData() {
-    fetch("http://localhost:3000/api/reception/tables")
-      .then((res) => res.json())
-      .then(setTables);
+  function getAuthHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + sessionStorage.getItem("token"),
+    };
+  }
 
-    fetch("http://localhost:3000/api/reception/bookings")
+  function loadData() {
+    // 1. Load danh sách bàn
+    fetch("http://localhost:3000/api/reception/tables", {
+      headers: getAuthHeaders(),
+    })
       .then((res) => res.json())
-      .then(setBookings);
+      .then(setTables)
+      .catch((err) => console.error("Lỗi tải bàn:", err));
+
+    // 2. Load danh sách đặt bàn
+    fetch("http://localhost:3000/api/reception/bookings", {
+      headers: getAuthHeaders(),
+    })
+      .then((res) => res.json())
+      .then(setBookings)
+      .catch((err) => console.error("Lỗi tải đặt bàn:", err));
   }
 
   useEffect(() => {
@@ -33,11 +50,11 @@ export default function ReceptionDashboard() {
     const newErrors = {};
 
     if (!form.guest_name.trim())
-      newErrors.guest_name = "Guest name is required.";
-    if (!form.phone.trim()) newErrors.phone = "Phone number is required.";
-    if (!form.guest_count) newErrors.guest_count = "Guest count is required.";
-    if (!form.booking_time)
-      newErrors.booking_time = "Booking time is required.";
+      newErrors.guest_name = "Vui lòng nhập tên khách.";
+    if (!form.phone.trim()) newErrors.phone = "Vui lòng nhập số điện thoại.";
+    if (!form.guest_count)
+      newErrors.guest_count = "Vui lòng nhập số lượng khách.";
+    if (!form.booking_time) newErrors.booking_time = "Vui lòng chọn thời gian.";
 
     setErrors(newErrors);
 
@@ -48,51 +65,60 @@ export default function ReceptionDashboard() {
     e.preventDefault();
 
     if (!validateForm()) {
-      return; // ❌ Stop submit nếu lỗi
-    }
-
-    if (
-      !form.guest_name ||
-      !form.phone ||
-      !form.guest_count ||
-      !form.booking_time
-    ) {
-      alert("Please fill in all fields.");
       return;
     }
 
-    // UPDATE BOOKING
+    // Logic Sửa
     if (editingBooking) {
       fetch(`http://localhost:3000/api/reception/book/${editingBooking.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(form),
-      }).then(() => {
-        loadData();
-        setShowModal(false);
-        setEditingBooking(null);
+      }).then((res) => {
+        if (res.ok) {
+          loadData();
+          setShowModal(false);
+          setEditingBooking(null);
+        } else {
+          alert("Có lỗi khi cập nhật.");
+        }
       });
       return;
     }
 
-    // CREATE BOOKING
+    // Logic Thêm Mới (CREATE BOOKING)
     fetch("http://localhost:3000/api/reception/book", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ ...form, table_id: selectedTable.id }),
-    }).then(() => {
-      loadData();
-      setShowModal(false);
-    });
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Đặt bàn thất bại");
+        }
+        alert("Đặt bàn thành công!");
+        loadData();
+        setShowModal(false);
+        resetForm();
+      })
+      .catch((err) => {
+        alert(err.message);
+      });
   }
 
+  // Map màu sắc theo trạng thái
   function getTableColor(status) {
-    return {
-      free: "#4caf50",
-      booked: "#ff9800",
-      occupied: "#e53935",
-      unavailable: "#9e9e9e",
-    }[status];
+    switch (status) {
+      case "Trống":
+        return "#4caf50"; // Xanh lá
+      case "Đã đặt":
+        return "#ff9800"; // Cam
+      case "Đang phục vụ":
+        return "#e53935"; // Đỏ
+      default:
+        return "#9e9e9e"; // Xám
+    }
   }
 
   function resetForm() {
@@ -102,45 +128,58 @@ export default function ReceptionDashboard() {
       guest_count: "",
       booking_time: "",
     });
-    setErrors({}); // ⭐ RESET ERROR STATE
+    setErrors({});
     setEditingBooking(null);
   }
 
   function openEditModal(booking) {
+    // Lưu ý: booking object trả về từ API getBookings đang dùng camelCase (guestName, phone...)
     setSelectedTable({
-      id: booking.table_id,
-      table_number: booking.table_number,
+      id: booking.tableId,
+      table_number: booking.tableId, // Dùng ID làm số bàn
     });
     setEditingBooking(booking);
+
+    // Format thời gian cho input datetime-local (YYYY-MM-DDTHH:mm)
+    const formattedTime = booking.bookingTime
+      ? booking.bookingTime.slice(0, 16)
+      : "";
+
     setForm({
-      guest_name: booking.guest_name,
+      guest_name: booking.guestName,
       phone: booking.phone,
-      guest_count: booking.guest_count,
-      booking_time: booking.booking_time.slice(0, 16),
+      guest_count: booking.guestCount,
+      booking_time: formattedTime,
     });
     setShowModal(true);
   }
 
   function deleteBooking(id) {
-    if (!confirm("Are you sure you want to delete this booking?")) return;
+    if (!confirm("Bạn có chắc muốn hủy đơn đặt bàn này?")) return;
 
     fetch(`http://localhost:3000/api/reception/book/${id}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     }).then(() => loadData());
   }
 
   return (
     <DashboardLayout>
       <h2 style={{ color: "#5a381e", marginBottom: "15px" }}>
-        Reception Dashboard
+        Bảng Điều Khiển Lễ Tân
       </h2>
 
-      <div style={{ display: "flex", gap: "20px", width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          width: "100%",
+          flexDirection: "row",
+        }}
+      >
         {/* LEFT — TABLE OVERVIEW */}
         <div style={{ flex: 2 }}>
-          <h3 style={{ color: "#5a381e", marginBottom: "10px" }}>
-            Table Overview
-          </h3>
+          <h3 style={{ color: "#5a381e", marginBottom: "10px" }}>Sơ Đồ Bàn</h3>
 
           <div
             style={{
@@ -168,25 +207,68 @@ export default function ReceptionDashboard() {
                     selectedTable?.id === t.id
                       ? "3px solid #b3541e"
                       : "2px solid #fff",
+                  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
                 }}
               >
-                Table {t.table_number}
+                Bàn {t.id}
                 <br />
-                Seats: {t.capacity}
+                <span style={{ fontSize: "0.85rem", fontWeight: "normal" }}>
+                  Sức chứa: {t.capacity}
+                </span>
                 <br />
-                <small>{t.status}</small>
+                <small
+                  style={{
+                    textTransform: "uppercase",
+                    marginTop: "5px",
+                    display: "block",
+                  }}
+                >
+                  {t.status}
+                </small>
               </div>
             ))}
+          </div>
+
+          {/* Legend / Chú thích màu */}
+          <div
+            style={{
+              marginTop: "20px",
+              display: "flex",
+              gap: "15px",
+              fontSize: "0.9rem",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <div
+                style={{ width: 15, height: 15, background: "#4caf50" }}
+              ></div>{" "}
+              Trống
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <div
+                style={{ width: 15, height: 15, background: "#ff9800" }}
+              ></div>{" "}
+              Đã đặt
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <div
+                style={{ width: 15, height: 15, background: "#e53935" }}
+              ></div>{" "}
+              Đang phục vụ
+            </div>
           </div>
         </div>
 
         {/* RIGHT — UPCOMING BOOKINGS */}
-        <div className="table-wrapper" style={{ flex: 1 }}>
+        <div className="table-wrapper" style={{ flex: 1, minWidth: "350px" }}>
           <h3 style={{ marginBottom: "10px", color: "#5a381e" }}>
-            Upcoming Bookings
+            Lịch Đặt Bàn Sắp Tới
           </h3>
 
-          <ul style={{ listStyle: "none" }}>
+          <ul style={{ listStyle: "none", padding: 0 }}>
+            {bookings.length === 0 && (
+              <p style={{ color: "#777" }}>Chưa có lịch đặt bàn nào.</p>
+            )}
             {bookings.map((b) => (
               <li
                 key={b.id}
@@ -199,26 +281,40 @@ export default function ReceptionDashboard() {
                 }}
               >
                 <div>
-                  <strong>{b.guest_name}</strong> — Table {b.table_number}
+                  <strong>{b.guestName}</strong> — Bàn {b.tableId}
                   <br />
-                  <small>{new Date(b.booking_time).toLocaleString()}</small>
+                  <small style={{ color: "#555" }}>
+                    {new Date(b.bookingTime).toLocaleString("vi-VN")}
+                    <br />
+                    Khách: {b.guestCount} | {b.status}
+                  </small>
                 </div>
 
-                <div style={{ display: "flex", gap: "10px" }}>
+                {/* Các nút hành động (nếu backend hỗ trợ) */}
+                <div style={{ display: "flex", gap: "5px" }}>
                   <button
                     className="btn"
-                    style={{ background: "#b3541e", padding: "6px 10px" }}
+                    style={{
+                      background: "#b3541e",
+                      padding: "6px 10px",
+                      fontSize: "12px",
+                    }}
                     onClick={() => openEditModal(b)}
                   >
-                    Edit
+                    Sửa
                   </button>
 
+                  {/* Hiện tại ẩn nút Delete để tránh lỗi nếu chưa có API */}
                   <button
                     className="btn"
-                    style={{ background: "#c62828", padding: "6px 10px" }}
+                    style={{
+                      background: "#c62828",
+                      padding: "6px 10px",
+                      fontSize: "12px",
+                    }}
                     onClick={() => deleteBooking(b.id)}
                   >
-                    Delete
+                    Hủy
                   </button>
                 </div>
               </li>
@@ -247,15 +343,18 @@ export default function ReceptionDashboard() {
               x
             </button>
 
-            <h2 style={{ marginBottom: "12px" }}>
+            <h2 style={{ marginBottom: "12px", color: "#b3541e" }}>
               {editingBooking
-                ? `Edit Booking (Table ${editingBooking.table_number})`
-                : `Book Table ${selectedTable.table_number}`}
+                ? `Sửa Đặt Bàn (Bàn ${selectedTable.id})`
+                : `Đặt Bàn Số ${selectedTable.id}`}
             </h2>
 
             <form onSubmit={handleSubmit}>
+              <label style={{ fontSize: "0.9rem", fontWeight: "bold" }}>
+                Tên Khách Hàng
+              </label>
               <input
-                placeholder="Guest Name"
+                placeholder="Nhập tên khách"
                 value={form.guest_name}
                 onChange={(e) =>
                   setForm({ ...form, guest_name: e.target.value })
@@ -266,8 +365,11 @@ export default function ReceptionDashboard() {
                 <div style={modalStyles.error}>{errors.guest_name}</div>
               )}
 
+              <label style={{ fontSize: "0.9rem", fontWeight: "bold" }}>
+                Số Điện Thoại
+              </label>
               <input
-                placeholder="Phone Number"
+                placeholder="Nhập SĐT liên hệ"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 style={modalStyles.input}
@@ -276,19 +378,26 @@ export default function ReceptionDashboard() {
                 <div style={modalStyles.error}>{errors.phone}</div>
               )}
 
+              <label style={{ fontSize: "0.9rem", fontWeight: "bold" }}>
+                Số Lượng Khách
+              </label>
               <input
-                placeholder="Guest Count"
+                placeholder="Ví dụ: 4"
                 type="number"
                 value={form.guest_count}
                 onChange={(e) =>
                   setForm({ ...form, guest_count: e.target.value })
                 }
                 style={modalStyles.input}
+                min="1"
               />
               {errors.guest_count && (
                 <div style={modalStyles.error}>{errors.guest_count}</div>
               )}
 
+              <label style={{ fontSize: "0.9rem", fontWeight: "bold" }}>
+                Thời Gian Đặt
+              </label>
               <input
                 type="datetime-local"
                 value={form.booking_time}
@@ -301,8 +410,11 @@ export default function ReceptionDashboard() {
                 <div style={modalStyles.error}>{errors.booking_time}</div>
               )}
 
-              <button className="btn" style={{ width: "100%" }}>
-                Confirm Booking
+              <button
+                className="btn"
+                style={{ width: "100%", marginTop: "10px" }}
+              >
+                Xác Nhận Đặt Bàn
               </button>
             </form>
           </div>
@@ -336,7 +448,8 @@ const modalStyles = {
   },
   input: {
     width: "100%",
-    padding: "12px",
+    padding: "10px",
+    marginTop: "5px",
     marginBottom: "12px",
     border: "1px solid #ccc",
     borderRadius: "6px",

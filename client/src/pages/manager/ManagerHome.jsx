@@ -22,14 +22,14 @@ export default function ManagerHome() {
         });
 
         if (!res.ok) {
-          setError("Failed to load stats.");
+          setError("Không thể tải thống kê");
           return;
         }
 
         const data = await res.json();
         setStats(data);
       } catch {
-        setError("Server error");
+        setError("Lỗi máy chủ");
       } finally {
         setLoading(false);
       }
@@ -41,11 +41,11 @@ export default function ManagerHome() {
   return (
     <DashboardLayout>
       <div style={{ padding: "40px" }}>
-        <h1 style={{ color: "#5a381e" }}>Manager Dashboard</h1>
-        <p style={{ color: "#666" }}>Overview of today's performance</p>
+        <h1 style={{ color: "#5a381e" }}>Bảng Điều Khiển Quản Lý</h1>
+        <p style={{ color: "#666" }}>Tổng quan hoạt động trong ngày</p>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
-        {loading && <p>Loading statistics...</p>}
+        {loading && <p>Đang tải dữ liệu...</p>}
 
         {/* STATS */}
         {!loading && !error && (
@@ -58,26 +58,29 @@ export default function ManagerHome() {
             }}
           >
             <div style={cardStyle}>
-              <h3>Revenue Today</h3>
-              <p style={statValue}>${stats.revenueToday.toFixed(2)}</p>
+              <h3>Doanh Thu Hôm Nay</h3>
+              <p style={statValue}>
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(stats.revenueToday)}
+              </p>
             </div>
 
             <div style={cardStyle}>
-              <h3>Orders Today</h3>
+              <h3>Đơn Hàng</h3>
               <p style={statValue}>{stats.ordersToday}</p>
             </div>
 
             <div style={cardStyle}>
-              <h3>Customers Today</h3>
+              <h3>Lượt Khách</h3>
               <p style={statValue}>{stats.customersToday}</p>
             </div>
           </div>
         )}
 
         {/* MANAGEMENT LINKS */}
-        <h2 style={{ marginTop: "35px", color: "#5a381e" }}>
-          Management Tools
-        </h2>
+        <h2 style={{ marginTop: "35px", color: "#5a381e" }}>Công Cụ Quản Lý</h2>
 
         <div
           style={{
@@ -88,15 +91,15 @@ export default function ManagerHome() {
           }}
         >
           <Link to="/manager/employees" style={actionButton}>
-            Manage Employees
+            Quản Lý Nhân Viên
           </Link>
 
           <Link to="/manager/menu" style={actionButton}>
-            Manage Menu
+            Quản Lý Thực Đơn
           </Link>
 
           <Link to="/manager/reports" style={actionButton}>
-            View Reports (Coming soon)
+            Xem Báo Cáo
           </Link>
         </div>
       </div>

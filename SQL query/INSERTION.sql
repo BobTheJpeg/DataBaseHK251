@@ -1,21 +1,22 @@
 ﻿USE DB_RESTAURANT
 
-INSERT INTO NHANVIEN (CCCD, HoTen, NgaySinh, NgayVaoLam, Luong, DiaChi, ChucDanh, LoaiHinhLamViec, ID_GiamSat) VALUES
-('079090000001', N'Nguyễn Văn Quản Lý', '1985-01-01', '2020-01-01', 25000000, N'Quận 1, HCM', N'Quản lý', N'Fulltime', NULL),
-('079090000002', N'Trần Thị Bếp Trưởng', '1988-05-10', '2020-02-01', 20000000, N'Quận 3, HCM', N'Bếp trưởng', N'Fulltime', NULL),
-('079090000003', N'Lê Văn Đầu Bếp 1', '1995-08-15', '2021-03-10', 12000000, N'Thủ Đức, HCM', N'Đầu bếp', N'Fulltime', 2),
-('079090000004', N'Phạm Văn Đầu Bếp 2', '1996-12-20', '2021-04-01', 11000000, N'Gò Vấp, HCM', N'Đầu bếp', N'Fulltime', 2),
-('079090000005', N'Hoàng Thị Lễ Tân 1', '2000-01-01', '2022-01-01', 8000000, N'Quận 10, HCM', N'Lễ tân', N'Fulltime', 1),
-('079090000006', N'Vũ Thị Lễ Tân 2', '2001-02-14', '2022-06-01', 7500000, N'Quận 5, HCM', N'Lễ tân', N'Parttime', 1),
-('079090000007', N'Đặng Văn Kho', '1990-11-11', '2020-05-05', 15000000, N'Bình Thạnh, HCM', N'Quản lý kho', N'Fulltime', 1),
-('079090000008', N'Bùi Thị Phục Vụ 1', '1999-09-09', '2023-01-01', 6000000, N'Quận 4, HCM', N'Phục vụ', N'Fulltime', 1),
-('079090000009', N'Đỗ Văn Phục Vụ 2', '1998-07-07', '2023-02-01', 6000000, N'Quận 7, HCM', N'Phục vụ', N'Fulltime', 1),
-('079090000010', N'Lý Thị Phục Vụ 3', '2002-03-03', '2023-03-01', 5500000, N'Quận 8, HCM', N'Phục vụ', N'Parttime', 1),
-('079090000011', N'Ngô Văn Phục Vụ 4', '2003-04-04', '2023-04-01', 5500000, N'Quận 12, HCM', N'Phục vụ', N'Parttime', 1),
-('079090000012', N'Hồ Thị Phục Vụ 5', '2000-10-10', '2023-05-01', 6000000, N'Tân Bình, HCM', N'Phục vụ', N'Fulltime', 1),
-('079090000013', N'Dương Văn Bếp Phụ 1', '1997-06-06', '2022-08-01', 9000000, N'Bình Tân, HCM', N'Đầu bếp', N'Fulltime', 2),
-('079090000014', N'Mai Thị Bếp Phụ 2', '1998-11-11', '2022-09-01', 9000000, N'Tân Phú, HCM', N'Đầu bếp', N'Fulltime', 2),
-('079090000015', N'Cao Văn Phục Vụ 6', '1986-12-12', '2019-01-01', 26000000, N'Quận 2, HCM', N'Phục Vụ', N'Fulltime', 12);
+-- [NEW] Đã thêm cột Username và Password
+INSERT INTO NHANVIEN (CCCD, HoTen, Username, Password, NgaySinh, NgayVaoLam, Luong, DiaChi, ChucDanh, LoaiHinhLamViec, ID_GiamSat) VALUES
+('079090000001', N'Nguyễn Văn Quản Lý', 'admin01', '123456', '1985-01-01', '2020-01-01', 25000000, N'Quận 1, HCM', N'Quản lý', N'Fulltime', NULL),
+('079090000002', N'Trần Thị Bếp Trưởng', 'chef_head01', '123456', '1988-05-10', '2020-02-01', 20000000, N'Quận 3, HCM', N'Bếp trưởng', N'Fulltime', NULL),
+('079090000003', N'Lê Văn Đầu Bếp', 'cook01', '123456', '1995-08-15', '2021-03-10', 12000000, N'Thủ Đức, HCM', N'Đầu bếp', N'Fulltime', 2),
+('079090000004', N'Phạm Văn Đầu Bếp', 'cook02', '123456', '1996-12-20', '2021-04-01', 11000000, N'Gò Vấp, HCM', N'Đầu bếp', N'Fulltime', 2),
+('079090000005', N'Hoàng Thị Lễ Tân', 'reception01', '123456', '2000-01-01', '2022-01-01', 8000000, N'Quận 10, HCM', N'Lễ tân', N'Fulltime', 1),
+('079090000006', N'Vũ Thị Lễ Tân', 'reception02', '123456', '2001-02-14', '2022-06-01', 7500000, N'Quận 5, HCM', N'Lễ tân', N'Parttime', 1),
+('079090000007', N'Đặng Văn Kho', 'warehouse01', '123456', '1990-11-11', '2020-05-05', 15000000, N'Bình Thạnh, HCM', N'Quản lý kho', N'Fulltime', 1),
+('079090000008', N'Bùi Thị Phục Vụ', 'waiter01', '123456', '1999-09-09', '2023-01-01', 6000000, N'Quận 4, HCM', N'Phục vụ', N'Fulltime', 1),
+('079090000009', N'Đỗ Văn Phục Vụ', 'waiter02', '123456', '1998-07-07', '2023-02-01', 6000000, N'Quận 7, HCM', N'Phục vụ', N'Fulltime', 1),
+('079090000010', N'Lý Thị Phục Vụ', 'waiter03', '123456', '2002-03-03', '2023-03-01', 5500000, N'Quận 8, HCM', N'Phục vụ', N'Parttime', 1),
+('079090000011', N'Ngô Văn Phục Vụ', 'waiter04', '123456', '2003-04-04', '2023-04-01', 5500000, N'Quận 12, HCM', N'Phục vụ', N'Parttime', 1),
+('079090000012', N'Hồ Thị Phục Vụ', 'waiter05', '123456', '2000-10-10', '2023-05-01', 6000000, N'Tân Bình, HCM', N'Phục vụ', N'Fulltime', 1),
+('079090000013', N'Dương Văn Bếp Phụ', 'cook03', '123456', '1997-06-06', '2022-08-01', 9000000, N'Bình Tân, HCM', N'Đầu bếp', N'Fulltime', 2),
+('079090000014', N'Mai Thị Bếp Phụ', 'cook04', '123456', '1998-11-11', '2022-09-01', 9000000, N'Tân Phú, HCM', N'Đầu bếp', N'Fulltime', 2),
+('079090000015', N'Cao Văn Phục Vụ', 'waiter06', '123456', '1986-12-12', '2019-01-01', 26000000, N'Quận 2, HCM', N'Phục Vụ', N'Fulltime', 12);
 
 -- 2. SDT_NHANVIEN
 INSERT INTO SDT_NHANVIEN (ID_NhanVien, SDT) VALUES

@@ -9,10 +9,18 @@ export default function ManageEmployees() {
   const [editing, setEditing] = useState(null); // track editing row
 
   const [form, setForm] = useState({
+    cccd: "",
     name: "",
-    email: "",
+    username: "",
     password: "",
-    role: "server",
+    dob: "",
+    startDate: new Date().toISOString().split("T")[0], // Mặc định hôm nay
+    salary: "",
+    address: "",
+    phone: "",
+    role: "Phục vụ",
+    workType: "Fulltime",
+    supervisorId: "", // Optional
   });
 
   // Load employees
@@ -27,14 +35,24 @@ export default function ManageEmployees() {
       });
 
       if (!res.ok) {
-        setError("Failed to fetch employees");
+        // Đọc lỗi chi tiết từ Backend trả về
+        const errData = await res.json().catch(() => ({}));
+        const msg = errData.error || res.statusText || "Lỗi không xác định";
+
+        console.error("Lỗi API tải nhân viên:", res.status, msg);
+        setError(`Lỗi ${res.status}: ${msg}`);
+
+        // Nếu lỗi 401/403 (Hết hạn/Không quyền), có thể logout
+        if (res.status === 401) {
+          // sessionStorage.clear(); window.location.href = '/login';
+        }
         return;
       }
 
       const data = await res.json();
       setEmployees(data);
     } catch {
-      setError("Server error");
+      setError("Lỗi máy chủ");
     } finally {
       setLoading(false);
     }
@@ -49,8 +67,9 @@ export default function ManageEmployees() {
     e.preventDefault();
     setError("");
 
+    // Backend endpoint
     const url = editing
-      ? `http://localhost:3000/api/manager/update-employee/${editing.id}`
+      ? `http://localhost:3000/api/manager/update-employee/${editing.id}` // Cần đảm bảo backend có route này
       : `http://localhost:3000/api/manager/add-employee`;
 
     const method = editing ? "PUT" : "POST";
@@ -65,43 +84,62 @@ export default function ManageEmployees() {
         body: JSON.stringify(form),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errData = await res.json();
-        setError(errData.error || "Failed to save employee");
+        // Hiển thị lỗi từ backend (vd: Lương âm, chưa đủ tuổi...)
+        setError(data.error || "Lưu nhân viên thất bại");
+        alert(data.error);
         return;
       }
 
+      alert(editing ? "Cập nhật thành công!" : "Thêm nhân viên thành công!");
       await loadEmployees();
-
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        role: "server",
-      });
-      setEditing(null);
+      resetForm();
     } catch {
-      setError("Network or server error");
+      setError("Lỗi kết nối hoặc lỗi máy chủ");
     }
   }
 
-  async function deleteEmployee(id) {
-    if (!confirm("Delete this employee?")) return;
-
-    await fetch(`http://localhost:3000/api/manager/delete-employee/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: "Bearer " + sessionStorage.getItem("token"),
-      },
+  function resetForm() {
+    setForm({
+      cccd: "",
+      name: "",
+      username: "",
+      password: "",
+      dob: "",
+      startDate: new Date().toISOString().split("T")[0],
+      salary: "",
+      address: "",
+      phone: "",
+      role: "Phục vụ",
+      workType: "Fulltime",
+      supervisorId: "",
     });
+    setEditing(null);
+  }
 
-    loadEmployees();
+  async function deleteEmployee(id) {
+    if (!confirm("Bạn có chắc muốn xóa nhân viên này (Cho nghỉ việc)?")) return;
+
+    try {
+      await fetch(`http://localhost:3000/api/manager/delete-employee/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+      });
+      loadEmployees();
+    } catch (err) {
+      console.error(err);
+      setError("Không thể xóa nhân viên");
+    }
   }
 
   return (
     <DashboardLayout>
       <h2 style={{ color: "#5a381e", marginBottom: "20px" }}>
-        Manage Employees
+        Quản Lý Nhân Viên
       </h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
@@ -113,50 +151,62 @@ export default function ManageEmployees() {
             <table className="table">
               <thead>
                 <tr>
-                  <th style={{ width: "25%" }}>Name</th>
-                  <th style={{ width: "25%" }}>Email</th>
-                  <th style={{ width: "20%" }}>Role</th>
-                  <th style={{ width: "30%", textAlign: "center" }}>Actions</th>
+                  <th style={{ width: "20%" }}>Họ Tên</th>
+                  <th style={{ width: "20%" }}>Username</th>
+                  <th style={{ width: "20%" }}>Chức Danh</th>
+                  <th style={{ width: "20%" }}>SĐT</th>
+                  <th style={{ width: "20%", textAlign: "center" }}>
+                    Hành Động
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="4">Loading...</td>
+                    <td colSpan="4">Đang tải...</td>
                   </tr>
                 ) : (
                   employees.map((emp) => (
                     <tr key={emp.id}>
                       <td>{emp.name}</td>
-                      <td>{emp.email}</td>
+                      <td>{emp.username}</td>
                       <td>{emp.role}</td>
-                      <td>
+                      <td>{emp.phone}</td>
+                      <td style={{ textAlign: "center" }}>
                         <button
                           className="btn"
-                          style={{ marginRight: "10px", padding: "5px 10px" }}
+                          style={{
+                            marginRight: "5px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                          }}
                           onClick={() => {
+                            // Lưu ý: Khi edit, cần load đủ thông tin chi tiết vào form
+                            // Ở đây ta giả lập fill các field có sẵn từ list
                             setEditing(emp);
-                            setForm({
+                            setForm((prev) => ({
+                              ...prev,
                               name: emp.name,
-                              email: emp.email,
-                              password: "",
+                              username: emp.username,
                               role: emp.role,
-                            });
+                              phone: emp.phone,
+                              // Các trường khác nếu API getList không trả về thì phải gọi API detail hoặc để trống
+                            }));
                           }}
                         >
-                          Edit
+                          Sửa
                         </button>
-
                         <button
                           className="btn"
                           style={{
                             background: "#c62828",
                             padding: "5px 10px",
+                            fontSize: "12px",
                           }}
                           onClick={() => deleteEmployee(emp.id)}
                         >
-                          Delete
+                          Xóa
                         </button>
                       </td>
                     </tr>
@@ -167,75 +217,162 @@ export default function ManageEmployees() {
           </div>
         </div>
 
-        {/* RIGHT: EMPLOYEE FORM */}
-        <div className="form" style={{ flex: 1 }}>
-          <h3>{editing ? "Edit Employee" : "Add Employee"}</h3>
+        {/* RIGHT: FORM */}
+        <div className="form" style={{ flex: 1, minWidth: "350px" }}>
+          <h3>{editing ? "Cập Nhật Nhân Viên" : "Thêm Mới Nhân Viên"}</h3>
 
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            {/* Nhóm thông tin đăng nhập */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              <input
+                placeholder="Username *"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                required
+                disabled={editing} // Không cho sửa username
+              />
+              <input
+                placeholder={
+                  editing ? "Mật khẩu mới (trống nếu giữ nguyên)" : "Mật khẩu *"
+                }
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required={!editing}
+              />
+            </div>
+
+            {/* Thông tin cá nhân */}
             <input
-              placeholder="Name"
+              placeholder="Họ và Tên *"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
             />
 
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              <input
+                placeholder="CCCD *"
+                value={form.cccd}
+                maxLength={12}
+                onChange={(e) => setForm({ ...form, cccd: e.target.value })}
+                required
+              />
+              <input
+                placeholder="Số điện thoại *"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                required
+              />
+            </div>
+
+            <label style={{ fontSize: "12px", color: "#666" }}>
+              Ngày sinh *
+            </label>
             <input
-              placeholder="Email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              type="date"
+              value={form.dob}
+              onChange={(e) => setForm({ ...form, dob: e.target.value })}
               required
             />
 
             <input
-              placeholder="Password"
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required={!editing}
+              placeholder="Địa chỉ"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
             />
 
+            {/* Thông tin công việc */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              <div>
+                <label style={{ fontSize: "12px", color: "#666" }}>
+                  Mức Lương *
+                </label>
+                <input
+                  type="number"
+                  placeholder="VNĐ"
+                  value={form.salary}
+                  onChange={(e) => setForm({ ...form, salary: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: "#666" }}>
+                  Ngày vào làm
+                </label>
+                <input
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) =>
+                    setForm({ ...form, startDate: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            <label style={{ fontSize: "12px", color: "#666" }}>
+              Chức Danh & Hình thức
+            </label>
             <select
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
             >
-              <option value="server">Server</option>
-              <option value="receptionist">Receptionist</option>
-              <option value="chef">Chef</option>
-              <option value="head_chef">Head Chef</option>
-              <option value="storage_manager">Storage Manager</option>
-              <option value="manager">Manager</option>
+              <option value="Phục vụ">Phục vụ</option>
+              <option value="Lễ tân">Lễ tân</option>
+              <option value="Đầu bếp">Đầu bếp</option>
+              <option value="Bếp trưởng">Bếp trưởng</option>
+              <option value="Quản lý kho">Quản lý kho</option>
+              <option value="Quản lý">Quản lý</option>
             </select>
 
-            {/* SAVE BUTTON */}
+            <select
+              value={form.workType}
+              onChange={(e) => setForm({ ...form, workType: e.target.value })}
+            >
+              <option value="Fulltime">Toàn thời gian (Fulltime)</option>
+              <option value="Parttime">Bán thời gian (Parttime)</option>
+            </select>
+
+            {/* Actions */}
             <button
               className="btn"
               style={{ width: "100%", marginTop: "10px" }}
             >
-              {editing ? "Save Changes" : "Add Employee"}
+              {editing ? "Lưu Thay Đổi" : "Thêm Nhân Viên"}
             </button>
 
-            {/* CANCEL BUTTON — ONLY SHOW WHEN EDITING */}
             {editing && (
               <button
                 type="button"
                 className="btn"
                 style={{
                   width: "100%",
-                  marginTop: "10px",
-                  backgroundColor: "#7a4d28",
+                  background: "#7a4d28",
                 }}
-                onClick={() => {
-                  setEditing(null);
-                  setForm({
-                    name: "",
-                    email: "",
-                    password: "",
-                    role: "server",
-                  });
-                }}
+                onClick={resetForm}
               >
-                Cancel
+                Hủy Bỏ
               </button>
             )}
           </form>

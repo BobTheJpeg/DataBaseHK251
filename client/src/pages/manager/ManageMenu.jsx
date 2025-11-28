@@ -11,7 +11,8 @@ export default function ManageMenu() {
   const [form, setForm] = useState({
     name: "",
     price: "",
-    category: "",
+    category: "Mặn", // Mặc định là Mặn để khớp Constraint
+    description: "",
   });
 
   // Load all menu items
@@ -25,14 +26,14 @@ export default function ManageMenu() {
       });
 
       if (!res.ok) {
-        setError("Failed to load menu");
+        setError("Không thể tải thực đơn");
         return;
       }
 
       const data = await res.json();
       setMenu(data);
     } catch {
-      setError("Server error");
+      setError("Lỗi máy chủ");
     } finally {
       setLoading(false);
     }
@@ -48,7 +49,7 @@ export default function ManageMenu() {
     setError("");
 
     const url = editing
-      ? `http://localhost:3000/api/manager/update-menu-item/${editing.id}`
+      ? `http://localhost:3000/api/manager/update-menu-item/${editing.id}` // Cần đảm bảo backend có
       : "http://localhost:3000/api/manager/add-menu-item";
 
     const method = editing ? "PUT" : "POST";
@@ -68,23 +69,23 @@ export default function ManageMenu() {
 
       if (!res.ok) {
         const errData = await res.json();
-        setError(errData.error || "Failed to save menu item");
+        setError(errData.error || "Lỗi khi lưu món ăn");
         return;
       }
 
       await loadMenu();
 
-      // RESET AFTER SAVE — return to Add mode
-      setForm({ name: "", price: "", category: "" });
+      // RESET Form
+      setForm({ name: "", price: "", category: "Mặn", description: "" });
       setEditing(null);
     } catch {
-      setError("Network or server error");
+      setError("Lỗi kết nối");
     }
   }
 
   // Delete menu item
   async function deleteItem(id) {
-    if (!confirm("Delete this menu item?")) return;
+    if (!confirm("Bạn có chắc muốn xóa món này?")) return;
 
     await fetch(`http://localhost:3000/api/manager/delete-menu-item/${id}`, {
       method: "DELETE",
@@ -98,7 +99,9 @@ export default function ManageMenu() {
 
   return (
     <DashboardLayout>
-      <h2 style={{ color: "#5a381e", marginBottom: "20px" }}>Manage Menu</h2>
+      <h2 style={{ color: "#5a381e", marginBottom: "20px" }}>
+        Quản Lý Thực Đơn
+      </h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
@@ -109,24 +112,31 @@ export default function ManageMenu() {
             <table className="table">
               <thead>
                 <tr>
-                  <th style={{ width: "30%" }}>Name</th>
-                  <th style={{ width: "20%" }}>Price</th>
-                  <th style={{ width: "20%" }}>Category</th>
-                  <th style={{ width: "30%", textAlign: "center" }}>Actions</th>
+                  <th style={{ width: "30%" }}>Tên Món</th>
+                  <th style={{ width: "20%" }}>Đơn Giá</th>
+                  <th style={{ width: "20%" }}>Phân Loại</th>
+                  <th style={{ width: "30%", textAlign: "center" }}>
+                    Hành Động
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="4">Loading...</td>
+                    <td colSpan="4">Đang tải...</td>
                   </tr>
                 ) : (
                   menu.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.name}</td>
-                      <td>${Number(item.price).toFixed(2)}</td>
-                      <td>{item.category}</td>
+                    <tr key={item.ID || item.id}>
+                      <td>{item.Ten || item.name}</td>
+                      <td>
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(item.DonGia || item.price)}
+                      </td>
+                      <td>{item.PhanLoai || item.category}</td>
                       <td>
                         <button
                           className="btn"
@@ -134,13 +144,14 @@ export default function ManageMenu() {
                           onClick={() => {
                             setEditing(item);
                             setForm({
-                              name: item.name,
-                              price: item.price,
-                              category: item.category,
+                              name: item.Ten || item.name,
+                              price: item.DonGia || item.price,
+                              category: item.PhanLoai || item.category,
+                              description: item.MoTa || item.description || "",
                             });
                           }}
                         >
-                          Edit
+                          Sửa
                         </button>
 
                         <button
@@ -149,9 +160,9 @@ export default function ManageMenu() {
                             background: "#c62828",
                             padding: "5px 10px",
                           }}
-                          onClick={() => deleteItem(item.id)}
+                          onClick={() => deleteItem(item.ID || item.id)}
                         >
-                          Delete
+                          Xóa
                         </button>
                       </td>
                     </tr>
@@ -164,31 +175,51 @@ export default function ManageMenu() {
 
         {/* RIGHT: MENU FORM */}
         <div className="form" style={{ flex: 1 }}>
-          <h3>{editing ? "Edit Menu Item" : "Add Menu Item"}</h3>
+          <h3>{editing ? "Sửa Món Ăn" : "Thêm Món Mới"}</h3>
 
           <form onSubmit={handleSubmit}>
+            <label>Tên món</label>
             <input
-              placeholder="Item name"
+              placeholder="Ví dụ: Phở bò"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
             />
 
+            <label>Đơn giá (VNĐ)</label>
             <input
-              placeholder="Price"
+              placeholder="0"
               type="number"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
               required
               min="0"
-              step="0.01"
             />
 
-            <input
-              placeholder="Category"
+            <label>Phân loại</label>
+            <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
-              required
+            >
+              <option value="Mặn">Mặn</option>
+              <option value="Chay">Chay</option>
+            </select>
+
+            <label>Mô tả (Nguyên liệu/Ghi chú)</label>
+            <textarea
+              placeholder="Ví dụ: Nạm, gầu, gân..."
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              style={{
+                width: "100%",
+                padding: "10px",
+                marginBottom: "10px",
+                borderRadius: "8px",
+                border: "1px solid #ccc",
+              }}
+              rows={3}
             />
 
             {/* SAVE BUTTON */}
@@ -196,10 +227,10 @@ export default function ManageMenu() {
               className="btn"
               style={{ width: "100%", marginTop: "10px" }}
             >
-              {editing ? "Save Changes" : "Add Item"}
+              {editing ? "Lưu Thay Đổi" : "Thêm Món"}
             </button>
 
-            {/* CANCEL BUTTON (only in edit mode) */}
+            {/* CANCEL BUTTON */}
             {editing && (
               <button
                 type="button"
@@ -211,10 +242,15 @@ export default function ManageMenu() {
                 }}
                 onClick={() => {
                   setEditing(null);
-                  setForm({ name: "", price: "", category: "" });
+                  setForm({
+                    name: "",
+                    price: "",
+                    category: "Mặn",
+                    description: "",
+                  });
                 }}
               >
-                Cancel
+                Hủy Bỏ
               </button>
             )}
           </form>
