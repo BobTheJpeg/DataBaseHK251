@@ -7,7 +7,7 @@ export default function AccessDenied() {
   const roleHomeRoutes = {
     "Phục vụ": "/server",
     "Đầu bếp": "/chef",
-    "Bếp trưởng": "/chef",
+    "Bếp trưởng": "/head-chef",
     "Lễ tân": "/reception",
     "Quản lý kho": "/storage",
     "Quản lý": "/manager",

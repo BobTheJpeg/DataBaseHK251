@@ -4,7 +4,8 @@ import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 
 import ServerDashboard from "./pages/ServerDashboard";
-import ChefDashboard from "./pages/ChefDashboard.jsx";
+import HeadChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
+import ChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
 import StorageDashboard from "./pages/StorageDashboard";
 import { ReceptionDashboard } from "./pages/receptionist/";
 import { ManageEmployees, ManagerHome, ManageMenu } from "./pages/manager/";
@@ -47,12 +48,22 @@ export default function App() {
         }
       />
 
-      {/* 2. Trang Bếp (Chef) - Bao gồm cả Bếp trưởng và Đầu bếp */}
+      {/* 2. Trang Bếp (Chef) - Chỉ gồm đầu bếp */}
       <Route
         path="/chef"
         element={
           <ProtectedRoute roles={["Đầu bếp", "Bếp trưởng"]}>
             <ChefDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 2.1 Trang Bếp Trưởng (Head Chef) */}
+      <Route
+        path="/head-chef"
+        element={
+          <ProtectedRoute roles={["Bếp trưởng"]}>
+            <HeadChefDashboard />
           </ProtectedRoute>
         }
       />

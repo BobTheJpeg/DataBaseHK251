@@ -35,8 +35,10 @@ export default function LoginPage() {
           navigate("/server");
           break;
         case "Đầu bếp":
-        case "Bếp trưởng":
           navigate("/chef");
+          break;
+        case "Bếp trưởng":
+          navigate("/head-chef");
           break;
         case "Lễ tân":
           navigate("/reception");

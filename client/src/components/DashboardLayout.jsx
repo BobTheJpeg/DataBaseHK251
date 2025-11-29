@@ -23,10 +23,13 @@ export default function DashboardLayout({ children }) {
               Bảng Điều Khiển
             </Link>
             <Link style={styles.link} to="/manager/employees">
-              Quản lý nhân viên
+              Quản Lý Nhân Viên
             </Link>
             <Link style={styles.link} to="/manager/menu">
-              Quản Lý Thực Đơn
+              Quản Lý Menu
+            </Link>
+            <Link style={styles.link} to="/manager/approve">
+              Duyệt Cập Nhật Menu
             </Link>
             <Link style={styles.link} to="/manager/reports">
               Báo Cáo
@@ -46,11 +49,22 @@ export default function DashboardLayout({ children }) {
           </>
         )}
 
-        {/* --- BẾP (Bếp trưởng & Đầu bếp) --- */}
-        {hasRole("Đầu bếp", "Bếp trưởng") && (
+        {/* --- BẾP (Đầu bếp) --- */}
+        {hasRole("Đầu bếp") && (
           <Link style={styles.link} to="/chef">
             Hàng Đợi Bếp
           </Link>
+        )}
+        {/* --- BẾP (Bếp trưởng) --- */}
+        {hasRole("Bếp trưởng") && (
+          <>
+            <Link style={styles.link} to="/chef">
+              Hàng Đợi Bếp
+            </Link>
+            <Link style={styles.link} to="/chef/add-menu">
+              Cập Nhật Món Ăn
+            </Link>
+          </>
         )}
 
         {/* --- LỄ TÂN --- */}
@@ -60,7 +74,7 @@ export default function DashboardLayout({ children }) {
               Đặt Bàn & Check-in
             </Link>
             <Link style={styles.link} to="/reception/payments">
-              💳 Thanh toán
+              Thanh toán
             </Link>
           </>
         )}
@@ -68,7 +82,7 @@ export default function DashboardLayout({ children }) {
         {/* --- QUẢN LÝ KHO --- */}
         {hasRole("Quản lý kho") && (
           <Link style={styles.link} to="/storage">
-            📦 Kho hàng (Inventory)
+            Kho hàng (Inventory)
           </Link>
         )}
 
