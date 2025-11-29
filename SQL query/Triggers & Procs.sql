@@ -1,6 +1,8 @@
 ﻿-- ========================================================
 -- PROCEDURE CRUD CHO NHAN VIEN 
 -- ========================================================
+USE DB_RESTAURANT;
+
 GO
 /* Triggers & Procedures */
 CREATE TRIGGER trg_ChiMotQuanLyActive
@@ -674,7 +676,7 @@ BEGIN
         -- 4. Tự động tạo DONGOIMON (Mở bill)
         -- ID_PhucVu tạm thời NULL hoặc gán đại diện, sau này cập nhật khi gọi món
         INSERT INTO DONGOIMON (ThoiGianTao, TrangThai, ID_Ban, ID_PhucVu)
-        VALUES (SYSUTCDATETIME(), N'Đang phục vụ', @ID_Ban, @ID_PhụcVu);
+        VALUES (SYSUTCDATETIME(), N'Đang phục vụ', @ID_Ban, @ID_PhucVu);
 
         COMMIT TRANSACTION;
         PRINT N'Khách đã nhận bàn. Đơn gọi món đã được tạo.';
@@ -950,15 +952,15 @@ END;
 -- ========================================================
 GO
 CREATE PROCEDURE sp_ThanhToan
-    @ID_Don         INT,
-    @Username_LeTan VARCHAR(50), -- Dùng Username extract ID
-    @PhuongThuc     NVARCHAR(50),
+    @ID_Don             INT,
+    @ID_LeTan           VARCHAR(50),
+    @PhuongThuc         NVARCHAR(50),
     
     -- Các tham số Giảm giá (Optional)
-    @SDT_Khach      VARCHAR(20) = NULL, -- Khách thành viên (để tích/trừ điểm)
-    @DiemSuDung     INT = 0,            -- Số điểm khách muốn dùng để giảm giá
-    @LuongGiamGia   DECIMAL(12,0) = 0,  -- Giảm giá tiền mặt trực tiếp (Voucher)
-    @PhanTram       FLOAT = 0           -- Giảm giá theo % (VD: 10 = 10%)
+    @SDT_Khach          VARCHAR(20) = NULL, -- Khách thành viên (để tích/trừ điểm)
+    @DiemSuDung         INT = 0,            -- Số điểm khách muốn dùng để giảm giá
+    @GiamGiaTheoLuong   DECIMAL(12,0) = 0,  -- Giảm giá tiền mặt trực tiếp (Voucher)
+    @PhanTramGiam       FLOAT = 0           -- Giảm giá theo % (VD: 10 = 10%)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -966,8 +968,6 @@ BEGIN
         BEGIN TRANSACTION;
 
         -- EXTRACT ID LỄ TÂN
-        DECLARE @ID_LeTan INT;
-        SELECT @ID_LeTan = ID FROM NHANVIEN WHERE Username = @Username_LeTan;
         IF @ID_LeTan IS NULL THROW 50000, N'Lỗi: Tài khoản không tồn tại.', 1;
 
         -- VALIDATE ĐƠN HÀNG
@@ -1024,7 +1024,7 @@ BEGIN
         END
 
         -- Tổng hợp giảm giá
-        SET @TongGiamGia = @VoucherCode + @GiamGiaTuDiem + @GiamGiaTuPercent;
+        SET @TongGiamGia = @GiamGiaTheoLuong + @GiamGiaTuDiem + @GiamGiaTuPercent;
 
         -- Check: Giảm giá không được vượt quá tổng tiền
         IF @TongGiamGia > @TongTienMon
