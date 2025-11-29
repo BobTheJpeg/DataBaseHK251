@@ -264,3 +264,35 @@ INSERT INTO BAOCAODOANHTHU (ThoiGianLap, LoaiBaoCao, Ky, Nam, TongDoanhThu, Tong
 ('2023-01-31', N'Tháng', 1, 2023, 120000000, 60000000),
 ('2023-02-28', N'Tháng', 2, 2023, 130000000, 65000000),
 ('2023-04-30', N'Tháng', 4, 2023, 140000000, 70000000);
+
+--INSERT DATA CHO table NGUYENLIEU_MONAN
+INSERT INTO NGUYENLIEU_MONAN (ID_MonAn, ID_NguyenLieu, SoLuongNgLieuDung, DonViTinh) VALUES
+-- 1. Phở Bò (5000) → cần Bò, Bánh phở, Rau sống, Gia vị
+(5000, 10001, 0.25,  N'kg'),     -- Thịt bò: 250g/tô (hiện có 50kg → đủ)
+(5000, 10004, 0.20,  N'kg'),     -- Bánh phở: 200g/tô (có 30kg → đủ)
+(5000, 10003, 0.05,  N'kg'),     -- Rau sống: 50g/tô (có 40kg → đủ)
+(5000, 10006, 0.01,  N'kg'),     -- Gia vị: 10g/tô (có 20kg → đủ)
+
+-- 2. Bún Chả (5001) → cần Thịt heo, Bún, Rau sống
+(5001, 10002, 0.20,  N'kg'),     -- Thịt heo: 200g/phần (có 70kg → đủ)
+(5001, 10005, 0.20,  N'kg'),     -- Bún: 200g/phần (có 60kg → đủ)
+(5001, 10003, 0.10,  N'kg'),     -- Rau sống: 100g/phần
+
+-- 3. Gỏi Cuốn (5002) → cần Bánh tráng, Thịt heo, Tôm, Rau sống, Bún
+(5002, 10002, 0.10,  N'kg'),     -- Thịt heo: 100g/phần
+(5002, 10005, 0.10,  N'kg'),     -- Bún
+(5002, 10003, 0.15,  N'kg'),     -- Rau sống: 150g/phần (có 40kg → đủ)
+
+-- 4. Bánh Mì (5003) → cần Bánh mì, Pate, Thịt heo, Rau sống, Dưa leo (giả sử Dưa leo là Rau sống)
+(5003, 10002, 0.08,  N'kg'),     -- Thịt heo: 80g/ổ
+(5003, 10003, 0.05,  N'kg'),     -- Rau sống + dưa leo
+
+-- 5. Cơm Tấm (5007) → cần Gạo, Thịt heo, Trứng (giả sử dùng Trứng gà = ID 10007 Cà pháo? → đổi thành Rau sống cho hợp lý)
+-- Thực tế nên thêm nguyên liệu "Trứng" sau, tạm dùng Rau sống để demo
+(5007, 10004, 0.20,  N'kg'),     -- Gạo → nhưng bảng nguyên liệu không có Gạo → dùng Bánh phở thay tạm để demo
+-- → Thay bằng Bún để có ID
+(5007, 10002, 0.15,  N'kg'),     -- Thịt heo
+(5007, 10005, 0.20,  N'kg'),     -- Bún (thay cho cơm tấm)
+
+-- 9. Nước Ép Trái Cây (5010) → cần Trái cây
+(5010, 10008, 0.5,   N'kg'),     -- Trái cây: 500g/ly (có 80kg → đủ)
