@@ -207,7 +207,7 @@ CREATE TABLE LANGOIMON_MON (
     ID_MonAn        INT                 NOT NULL,
     SoLuong         INT                 NOT NULL CHECK (SoLuong > 0),
     DonGiaThoiDiem  DECIMAL(12,0)       NOT NULL CHECK (DonGiaThoiDiem >= 0),
-    ThanhTien AS (SoLuong * DonGiaThoiDiem) PERSISTED -- Thành tiền không nhất thiết phải lưu vì sau cùng chỉ quan tâm đến tổng tiền trong order
+    ThanhTien       AS (SoLuong * DonGiaThoiDiem) PERSISTED
 );
 
 -- Relationship: DONGOIMON - LETAN - KHACHHANG
@@ -222,7 +222,7 @@ CREATE TABLE THANHTOAN (
 
     TongTienMon         DECIMAL(18,0)       NOT NULL CHECK (TongTienMon >= 0), -- Tổng tiền từ các món ăn (Chưa giảm)
     GiamGia             DECIMAL(12,0)       NOT NULL DEFAULT 0 CHECK (GiamGia >= 0), -- Cần check thêm <= TongTienMon
-    ThanhTien           AS (TongTienMon - GiamGia) -- Tính toán động
+    ThanhTien           AS (TongTienMon - GiamGia) PERSISTED
 );
 
 CREATE TABLE CAPNHAT_MONAN (
