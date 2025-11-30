@@ -295,4 +295,4 @@ INSERT INTO NGUYENLIEU_MONAN (ID_MonAn, ID_NguyenLieu, SoLuongNgLieuDung, DonViT
 (5007, 10005, 0.20,  N'kg'),     -- Bún (thay cho cơm tấm)
 
 -- 9. Nước Ép Trái Cây (5010) → cần Trái cây
-(5010, 10008, 0.5,   N'kg'),     -- Trái cây: 500g/ly (có 80kg → đủ)
+(5010, 10008, 0.5,   N'kg');     -- Trái cây: 500g/ly (có 80kg → đủ)
