@@ -194,7 +194,7 @@ export default function ManageEmployees() {
       const res = await fetch(
         `http://localhost:3000/api/manager/delete-employee/${id}`,
         {
-          method: "DELETE",
+          method: "POST",
           headers: getHeaders(),
         }
       );

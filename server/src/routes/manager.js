@@ -13,6 +13,10 @@ import {
   addEmployeePhone,
   deleteEmployeePhone,
 } from "../controllers/managerController.js";
+import {
+  getPendingMenuRequests,
+  processMenuRequest,
+} from "../controllers/managerController.js";
 
 const router = express.Router();
 
@@ -25,6 +29,9 @@ router.get("/employee-phones/:id", getEmployeePhones);
 router.post("/add-phone", addEmployeePhone);
 router.post("/delete-phone", deleteEmployeePhone);
 router.get("/menu", getMenuItems);
+
+router.get("/requests", getPendingMenuRequests);
+router.post("/process/:id", processMenuRequest);
 
 //redundant manager directly update menu
 router.post("/add-menu-item", addMenuItem);

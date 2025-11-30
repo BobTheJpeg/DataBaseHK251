@@ -309,3 +309,46 @@ export async function getStats(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+/* ---------------- MENU REQUESTS (DUYỆT YÊU CẦU) [MỚI] ---------------- */
+
+// Lấy danh sách yêu cầu đang chờ duyệt
+export async function getPendingMenuRequests(req, res) {
+    try {
+        await poolConnect;
+        const result = await pool.request().query(`
+            SELECT 
+                R.*, 
+                NV.HoTen as TenBepTruong,
+                M.Ten as TenMonGoc
+            FROM CAPNHAT_MONAN R
+            JOIN BEPTRUONG B ON R.ID_BepTruong = B.ID
+            JOIN NHANVIEN NV ON B.ID = NV.ID
+            LEFT JOIN MONAN M ON R.ID_MonAn = M.ID
+            WHERE R.TrangThai = N'Chờ duyệt'
+            ORDER BY R.ThoiGianTao ASC
+        `);
+        res.json(result.recordset);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+// Duyệt hoặc Từ chối
+export async function processMenuRequest(req, res) {
+    const { requestId, managerId, status } = req.body; // status: 'Đã duyệt' / 'Từ chối'
+
+    try {
+        await poolConnect;
+        const result = await pool.request()
+            .input("ID_YeuCau", sql.Int, requestId)
+            .input("ID_QuanLy", sql.Int, managerId)
+            .input("TrangThai", sql.NVarChar(20), status)
+            .execute("sp_DuyetYeuCauCapNhat");
+
+        const dbMessage = result.recordset[0]?.Message || "Đã xử lý yêu cầu";
+        res.json({ success: true, message: dbMessage });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+}

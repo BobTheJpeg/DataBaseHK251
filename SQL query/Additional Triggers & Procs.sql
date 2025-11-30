@@ -134,3 +134,124 @@ BEGIN
     END CATCH
 END;
 GO
+
+USE DB_RESTAURANT;
+GO
+
+-- 1. Procedure: Bếp trưởng gửi yêu cầu cập nhật thực đơn
+CREATE OR ALTER PROCEDURE sp_GuiYeuCauCapNhat
+    @ID_BepTruong   INT,
+    @LoaiYeuCau     NVARCHAR(10), -- 'Thêm', 'Sửa', 'Xóa'
+    @ID_MonAn       INT = NULL,   -- NULL nếu là 'Thêm'
+    @TenMon         NVARCHAR(100) = NULL,
+    @DonGia         DECIMAL(12,0) = NULL,
+    @MoTa           NVARCHAR(500) = NULL,
+    @PhanLoai       NVARCHAR(10) = NULL,
+    @LyDo           NVARCHAR(200)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- Validate cơ bản
+        IF @LoaiYeuCau NOT IN (N'Thêm', N'Sửa', N'Xóa')
+            THROW 50001, N'Lỗi: Loại yêu cầu không hợp lệ.', 1;
+
+        IF @LoaiYeuCau IN (N'Sửa', N'Xóa') AND @ID_MonAn IS NULL
+            THROW 50002, N'Lỗi: Phải chọn món ăn để Sửa hoặc Xóa.', 1;
+
+        -- Insert vào bảng CAPNHAT_MONAN
+        INSERT INTO CAPNHAT_MONAN (
+            ID_BepTruong, ID_MonAn, LoaiYeuCau, TrangThai, 
+            TenMon_DeXuat, DonGia_DeXuat, MoTa_DeXuat, PhanLoai_DeXuat, LyDo
+        )
+        VALUES (
+            @ID_BepTruong, @ID_MonAn, @LoaiYeuCau, N'Chờ duyệt',
+            @TenMon, @DonGia, @MoTa, @PhanLoai, @LyDo
+        );
+
+        COMMIT TRANSACTION;
+        SELECT N'Đã gửi yêu cầu "' + @LoaiYeuCau + N'" thành công. Vui lòng chờ Quản lý duyệt.' AS Message;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW; -- Ném lỗi nguyên bản ra ngoài
+    END CATCH
+END;
+GO
+
+-- 2. Procedure: Quản lý duyệt hoặc từ chối yêu cầu
+CREATE OR ALTER PROCEDURE sp_DuyetYeuCauCapNhat
+    @ID_YeuCau  INT,
+    @ID_QuanLy  INT,
+    @TrangThai  NVARCHAR(20) -- 'Đã duyệt' hoặc 'Từ chối'
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
+
+        -- Kiểm tra tồn tại yêu cầu
+        DECLARE @LoaiYeuCau NVARCHAR(10), @ID_MonAn INT;
+        DECLARE @Ten NVARCHAR(100), @Gia DECIMAL(12,0), @MoTa NVARCHAR(500), @PhanLoai NVARCHAR(10);
+
+        SELECT 
+            @LoaiYeuCau = LoaiYeuCau, 
+            @ID_MonAn = ID_MonAn,
+            @Ten = TenMon_DeXuat,
+            @Gia = DonGia_DeXuat,
+            @MoTa = MoTa_DeXuat,
+            @PhanLoai = PhanLoai_DeXuat
+        FROM CAPNHAT_MONAN 
+        WHERE ID = @ID_YeuCau AND TrangThai = N'Chờ duyệt';
+
+        IF @LoaiYeuCau IS NULL
+            THROW 50003, N'Lỗi: Yêu cầu không tồn tại hoặc đã được xử lý trước đó.', 1;
+
+        -- Cập nhật trạng thái yêu cầu
+        UPDATE CAPNHAT_MONAN
+        SET TrangThai = @TrangThai, 
+            ID_QuanLy = @ID_QuanLy, 
+            ThoiGianDuyet = SYSUTCDATETIME()
+        WHERE ID = @ID_YeuCau;
+
+        -- NẾU LÀ TỪ CHỐI -> Kết thúc luôn
+        IF @TrangThai = N'Từ chối'
+        BEGIN
+            COMMIT TRANSACTION;
+            SELECT N'Đã từ chối yêu cầu thành công.' AS Message;
+            RETURN;
+        END
+
+        -- NẾU LÀ DUYỆT -> Thực hiện thay đổi vào bảng MONAN
+        IF @LoaiYeuCau = N'Thêm'
+        BEGIN
+            INSERT INTO MONAN (Ten, DonGia, PhanLoai, MoTa, DangPhucVu, DangKinhDoanh)
+            VALUES (@Ten, @Gia, @PhanLoai, @MoTa, 1, 1);
+        END
+        ELSE IF @LoaiYeuCau = N'Sửa'
+        BEGIN
+            UPDATE MONAN
+            SET Ten = ISNULL(@Ten, Ten),
+                DonGia = ISNULL(@Gia, DonGia),
+                PhanLoai = ISNULL(@PhanLoai, PhanLoai),
+                MoTa = ISNULL(@MoTa, MoTa)
+            WHERE ID = @ID_MonAn;
+        END
+        ELSE IF @LoaiYeuCau = N'Xóa'
+        BEGIN
+            -- Xóa mềm (Ngừng kinh doanh)
+            UPDATE MONAN SET DangKinhDoanh = 0 WHERE ID = @ID_MonAn;
+        END
+
+        COMMIT TRANSACTION;
+        SELECT N'Đã duyệt yêu cầu và cập nhật thực đơn thành công.' AS Message;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+GO

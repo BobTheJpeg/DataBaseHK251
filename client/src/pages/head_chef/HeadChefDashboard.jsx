@@ -43,7 +43,7 @@ function KitchenQueue() {
     if (!token) return;
 
     // Gọi API lấy dummy data
-    fetch("http://localhost:3000/api/head-chef/queue", {
+    fetch("http://localhost:3000/api/chef/queue", {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
@@ -140,21 +140,18 @@ function MenuRequestForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/head-chef/request-menu",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + sessionStorage.getItem("token"),
-          },
-          body: JSON.stringify({
-            chefId: user.id,
-            type: requestType,
-            ...form,
-          }),
-        }
-      );
+      const res = await fetch("http://localhost:3000/api/chef/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + sessionStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          chefId: user.id,
+          type: requestType,
+          ...form,
+        }),
+      });
       const data = await res.json();
       alert(data.message || data.error);
       if (res.ok)

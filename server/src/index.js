@@ -5,6 +5,7 @@ import { config } from "./config.js";
 import authRoutes from "./routes/auth.js";
 import managerRoutes from "./routes/manager.js";
 import receptionRoutes from "./routes/reception.js";
+import chefRoutes from "./routes/chef.js";
 
 const app = express();
 app.use(cors());
@@ -14,7 +15,7 @@ app.get("/", (req, res) => res.send("Restaurant backend running ✓"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/manager", managerRoutes);
-
+app.use("/api/chef", chefRoutes);
 app.use("/api/reception", receptionRoutes);
 
 app.listen(config.port, () =>

@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }) {
             <Link style={styles.link} to="/manager/menu">
               Quản Lý Menu
             </Link>
-            <Link style={styles.link} to="/manager/approve">
+            <Link style={styles.link} to="/manager/requests">
               Duyệt Cập Nhật Menu
             </Link>
             <Link style={styles.link} to="/manager/reports">
