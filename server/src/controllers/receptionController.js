@@ -1,30 +1,57 @@
 import sql from "mssql";
 import { pool, poolConnect } from "../db.js";
 
-/* -------- GET ALL TABLES (Bàn) -------- */
+/* -------- GET TABLES WITH STATUS BY TIME (Lọc bàn theo giờ) -------- */
 export async function getTables(req, res) {
   try {
     await poolConnect;
-    // Bảng BAN: ID_Ban, SucChua, TrangThai
-    const result = await pool
-      .request()
-      .query(
-        "SELECT ID_Ban as id, SucChua as capacity, TrangThai as status FROM BAN ORDER BY ID_Ban ASC"
-      );
 
+    // Nhận tham số date (YYYY-MM-DD) và hour (0-23) từ query string
+    // Nếu không có thì lấy thời gian hiện tại
+    const now = new Date();
+    const date = req.query.date || now.toISOString().split("T")[0];
+    const hour =
+      req.query.hour !== undefined ? parseInt(req.query.hour) : now.getHours();
+
+    const request = pool.request();
+    request.input("Date", sql.Date, date);
+    request.input("Hour", sql.Int, hour);
+
+    // Query: Lấy tất cả bàn, Join với DATBAN để xem trong giờ đó có đơn nào không
+    // Chỉ lấy đơn chưa hủy
+    const query = `
+      SELECT 
+        B.ID_Ban as id, 
+        B.SucChua as capacity, 
+        CASE 
+            WHEN D.TrangThai IS NOT NULL THEN D.TrangThai 
+            ELSE N'Trống' 
+        END as status,
+        D.ID_DatBan as bookingId,
+        K.HoTen as guestName
+      FROM BAN B
+      LEFT JOIN DATBAN D ON B.ID_Ban = D.ID_Ban 
+        AND D.TrangThai <> N'Đã hủy'
+        AND CAST(D.ThoiGianDat AS DATE) = @Date
+        AND DATEPART(HOUR, D.ThoiGianDat) = @Hour
+      LEFT JOIN KHACHHANG K ON D.SDT_Khach = K.SDT
+      ORDER BY B.ID_Ban ASC
+    `;
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
 
-/* -------- GET ALL BOOKINGS (Đặt bàn) -------- */
+/* -------- GET ALL BOOKINGS (Giữ nguyên hoặc lọc theo ngày nếu muốn) -------- */
 export async function getBookings(req, res) {
   try {
     await poolConnect;
-    // Join DATBAN, BAN và KHACHHANG để lấy tên khách
+    // Lấy danh sách đặt bàn (Sắp xếp đơn mới nhất lên đầu)
     const result = await pool.request().query(`
-      SELECT 
+      SELECT TOP 50
         D.ID_DatBan as id,
         D.ThoiGianDat as bookingTime,
         D.SoLuongKhach as guestCount,
@@ -38,7 +65,6 @@ export async function getBookings(req, res) {
       LEFT JOIN KHACHHANG K ON D.SDT_Khach = K.SDT
       ORDER BY D.ThoiGianDat ASC
     `);
-
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -47,146 +73,93 @@ export async function getBookings(req, res) {
 
 /* -------- CREATE A BOOKING -------- */
 export async function createBooking(req, res) {
-  // Input: guest_name, phone, table_id, guest_count, booking_time
-  const { guest_name, phone, table_id, guest_count, booking_time } = req.body;
-  // Lấy ID Lễ tân từ Token (req.user do middleware auth giải mã)
+  const { guest_name, phone, table_id, guest_count, booking_time, note } =
+    req.body;
   const receptionistId = req.user ? req.user.id : null;
 
   try {
     await poolConnect;
-    const transaction = new sql.Transaction(pool);
+    const request = pool.request();
 
-    await transaction.begin();
+    request.input("SDT_Khach", sql.VarChar(20), phone);
+    request.input("TenKhach", sql.NVarChar(50), guest_name);
+    request.input("SoLuongKhach", sql.Int, guest_count);
+    request.input("ThoiGianDat", sql.DateTime2, booking_time); // Thời gian này do Frontend ghép từ Date+Hour
+    request.input("ID_Ban", sql.Int, table_id || null);
+    request.input("ID_LeTan", sql.Int, receptionistId);
+    request.input("GhiChu", sql.NVarChar(500), note || "");
 
-    try {
-      const request = new sql.Request(transaction);
+    await request.execute("sp_TaoDatBan");
 
-      // BƯỚC 1: Xử lý KHACHHANG (Vì DATBAN cần FK SDT_Khach)
-      // Kiểm tra nếu khách chưa tồn tại thì tạo mới khách vãng lai (Flag_ThanhVien = 0)
-      request.input("SDT", sql.VarChar(20), phone);
-      request.input("HoTen", sql.NVarChar(50), guest_name);
-
-      const checkCust = await request.query(
-        "SELECT 1 FROM KHACHHANG WHERE SDT = @SDT"
-      );
-      if (checkCust.recordset.length === 0) {
-        await request.query(`
-            INSERT INTO KHACHHANG (SDT, HoTen, Flag_ThanhVien) 
-            VALUES (@SDT, @HoTen, 0)
-          `);
-      }
-
-      // BƯỚC 2: Kiểm tra bàn có trống không
-      // Logic: Kiểm tra trong bảng DATBAN có đơn nào trùng bàn + trùng giờ + trạng thái chưa hủy không
-      request.input("ID_Ban", sql.Int, table_id);
-      request.input("ThoiGianDat", sql.DateTime, booking_time);
-
-      const conflict = await request.query(`
-        SELECT * FROM DATBAN
-        WHERE ID_Ban = @ID_Ban
-        AND TrangThai IN (N'Đã đặt', N'Đã nhận bàn')
-        AND ABS(DATEDIFF(MINUTE, ThoiGianDat, @ThoiGianDat)) < 120 -- Giả sử mỗi slot ăn là 2 tiếng
-      `);
-
-      if (conflict.recordset.length > 0) {
-        throw new Error("Bàn này đã được đặt trong khung giờ này.");
-      }
-
-      // BƯỚC 3: Insert DATBAN
-      request.input("SoLuongKhach", sql.Int, guest_count);
-      request.input("ID_LeTan", sql.Int, receptionistId);
-
-      await request.query(`
-        INSERT INTO DATBAN (SoLuongKhach, ThoiGianDat, TrangThai, ID_LeTan, SDT_Khach, ID_Ban)
-        VALUES (@SoLuongKhach, @ThoiGianDat, N'Đã đặt', @ID_LeTan, @SDT, @ID_Ban)
-      `);
-
-      // BƯỚC 4: Update trạng thái Bàn
-      await request.query(
-        "UPDATE BAN SET TrangThai = N'Đã đặt' WHERE ID_Ban = @ID_Ban"
-      );
-
-      await transaction.commit();
-      res.json({ success: true, message: "Đặt bàn thành công" });
-    } catch (innerErr) {
-      await transaction.rollback();
-      throw innerErr;
-    }
+    res.json({ success: true, message: "Đặt bàn thành công!" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Lỗi đặt bàn:", err.message);
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 
-/* -------- UPDATE TABLE STATUS -------- */
+/* -------- CHECK-IN -------- */
+export async function checkInBooking(req, res) {
+  const { id } = req.params;
+  const receptionistId = req.user ? req.user.id : null;
+
+  try {
+    await poolConnect;
+    const request = pool.request();
+    request.input("ID_DatBan", sql.Int, id);
+    request.input("ID_LeTan", sql.Int, receptionistId);
+    request.input("ID_PhucVu", sql.Int, null);
+
+    await request.execute("sp_NhanBan");
+    res.json({
+      success: true,
+      message: "Nhận bàn thành công. Đơn gọi món đã được tạo.",
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}
+
+/* -------- CANCEL BOOKING -------- */
+export async function cancelBooking(req, res) {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  try {
+    await poolConnect;
+    const request = pool.request();
+    request.input("ID_DatBan", sql.Int, id);
+    request.input(
+      "GhiChuHuy",
+      sql.NVarChar(200),
+      reason || "Khách yêu cầu hủy"
+    );
+
+    await request.execute("sp_HuyDatBan");
+    res.json({ success: true, message: "Đã hủy đặt bàn." });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}
+
 export async function updateTableStatus(req, res) {
-  const { table_id, status } = req.body;
-  // status gửi lên phải khớp tiếng Việt: 'Trống', 'Đã đặt', 'Đang phục vụ'
-
-  try {
-    await poolConnect;
-
-    await pool
-      .request()
-      .input("id", sql.Int, table_id)
-      .input("status", sql.NVarChar(20), status)
-      .query("UPDATE BAN SET TrangThai = @status WHERE ID_Ban = @id");
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json({ success: true });
 }
 
-// PUT /api/reception/book/:id
 export async function updateBooking(req, res) {
-  const { id } = req.params;
-  const { guest_name, phone, guest_count, booking_time } = req.body;
-
-  try {
-    await poolConnect;
-
-    // Cập nhật thông tin đặt bàn
-    // Lưu ý: Nếu muốn cập nhật tên khách/sđt thì phải update bảng KHACHHANG hoặc link sang khách mới.
-    // Ở đây ta update thông tin booking trong bảng DATBAN
-
-    const request = pool
-      .request()
-      .input("ID", sql.Int, id)
-      .input("SoLuongKhach", sql.Int, guest_count)
-      .input("ThoiGianDat", sql.DateTime, booking_time);
-
-    // Nếu có logic update khách hàng thì làm thêm query update KHACHHANG ở đây
-
-    await request.query(`
-        UPDATE DATBAN 
-        SET SoLuongKhach = @SoLuongKhach, ThoiGianDat = @ThoiGianDat
-        WHERE ID_DatBan = @ID
-    `);
-
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  // Logic update booking nếu cần (hiện tại chưa dùng tới trong UI mới)
+  res.json({ success: true });
 }
 
-// DELETE /api/reception/book/:id
 export async function deleteBooking(req, res) {
+  // Logic delete cứng (ít dùng, thường dùng cancel)
   const { id } = req.params;
   try {
     await poolConnect;
-
-    // Xóa booking (Nếu đã có order đi kèm thì nên chuyển trạng thái thành 'Đã hủy' thay vì Delete)
-    // Tuy nhiên theo yêu cầu DELETE:
     await pool
       .request()
       .input("ID", sql.Int, id)
       .query("DELETE FROM DATBAN WHERE ID_DatBan = @ID");
-
-    // Hoặc update trạng thái:
-    // .query("UPDATE DATBAN SET TrangThai = N'Đã hủy' WHERE ID_DatBan = @ID");
-
-    // Reset trạng thái bàn về 'Trống' nếu cần thiết (logic phức tạp hơn cần check trigger)
-
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
