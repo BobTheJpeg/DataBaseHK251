@@ -25,6 +25,8 @@ router.get("/employee-phones/:id", getEmployeePhones);
 router.post("/add-phone", addEmployeePhone);
 router.post("/delete-phone", deleteEmployeePhone);
 router.get("/menu", getMenuItems);
+
+//redundant manager directly update menu
 router.post("/add-menu-item", addMenuItem);
 router.put("/update-menu-item/:id", updateMenuItem);
 router.post("/delete-menu-item/:id", deleteMenuItem);

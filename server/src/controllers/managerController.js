@@ -136,8 +136,6 @@ export async function deleteEmployee(req, res) {
   const { id } = req.params;
   try {
     await poolConnect;
-
-    // [ĐÃ SỬA LỖI] Dùng biến 'result' (khác với 'res' của express)
     const result = await pool
       .request()
       .input("ID", sql.Int, id)
