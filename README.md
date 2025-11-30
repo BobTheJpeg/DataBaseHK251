@@ -97,7 +97,7 @@ PORT=3000
 JWT_SECRET=WILL BE SHARED IN PRIVATE GROUP CHAT
 ```
 
-Make sure your PostgreSQL server is running.
+Make sure your SQL server is running.
 
 ## 🔄 Git Workflow
 
