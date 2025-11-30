@@ -9,7 +9,7 @@ CREATE TABLE NHANVIEN (
 
     HoTen           NVARCHAR(200)           NOT NULL,
     NgaySinh        DATE                    NOT NULL,
-    NgayVaoLam      DATE                    NOT NULL DEFAULT GETDATE(),
+    NgayVaoLam      DATE                    NOT NULL DEFAULT GETUTCDATE(),
     NgayNghiViec    DATE,
     Luong           DECIMAL(12,2)           NOT NULL CHECK (Luong > 0),
     DiaChi          NVARCHAR(300),
@@ -18,8 +18,8 @@ CREATE TABLE NHANVIEN (
     ID_GiamSat      INT                     NULL,
 
     CONSTRAINT CK_NHANVIEN_CCCD CHECK (LEN(CCCD) = 12 AND CCCD NOT LIKE '%[^0-9]%'),
-    CONSTRAINT CK_NHANVIEN_AGE CHECK (DATEDIFF(DAY, NgaySinh, GETDATE())/365.25 >= 18), -- Xét theo ngày
-    CONSTRAINT CK_NHANVIEN_NGAYVAOLAM CHECK (NgayVaoLam <= CONVERT(date, GETDATE()))
+    CONSTRAINT CK_NHANVIEN_AGE CHECK (DATEDIFF(DAY, NgaySinh, GETUTCDATE())/365.25 >= 18), -- Xét theo ngày
+    CONSTRAINT CK_NHANVIEN_NGAYVAOLAM CHECK (NgayVaoLam <= CONVERT(date, GETUTCDATE()))
 );
 
 CREATE TABLE SDT_NHANVIEN (
@@ -137,14 +137,14 @@ CREATE TABLE BAOCAODOANHTHU (
 
 CREATE TABLE QUANLY (
     ID              INT                 PRIMARY KEY,
-    NgayNhanChuc    DATE                NOT NULL DEFAULT GETDATE(), -- Cần check điều kiện với NgayVaoLam
+    NgayNhanChuc    DATE                NOT NULL DEFAULT GETUTCDATE(), -- Cần check điều kiện với NgayVaoLam
     NgayKetThuc     DATE                NULL
 );
 
 CREATE TABLE BEPTRUONG (
     ID              INT                 PRIMARY KEY,
     ChuyenMon       NVARCHAR(50)        NULL,
-    NgayNhanChuc    DATE                NOT NULL DEFAULT GETDATE(), -- Cần check điều kiện với NgayVaoLam
+    NgayNhanChuc    DATE                NOT NULL DEFAULT GETUTCDATE(), -- Cần check điều kiện với NgayVaoLam
     NgayKetThuc     DATE                NULL
 );
 

@@ -84,7 +84,7 @@ BEGIN
         -- ========================================================
 
         -- 1. Validate Tuổi (>= 18)
-        IF (DATEDIFF(DAY, @NgaySinh, GETDATE()) / 365.25 < 18)
+        IF (DATEDIFF(DAY, @NgaySinh, GETUTCDATE()) / 365.25 < 18)
             THROW 50001, N'Lỗi: Nhân viên phải từ 18 tuổi trở lên.', 1;
 
         -- 2. Validate SĐT (Định dạng)
@@ -191,7 +191,7 @@ BEGIN
         COMMIT TRANSACTION;
         PRINT N'Thêm nhân viên thành công! Mã nhân viên mới: ' + CAST(@NewID AS NVARCHAR(20));
         -- Lấy thông báo để in trong backend
-        SELECT N'Thêm nhân viên thành công! Mã NV: ' + CAST(@NewID AS NVARCHAR(20)) AS Message;
+        SELECT N'Thêm nhân viên thành công! Mã nhân viên mới: ' + CAST(@NewID AS NVARCHAR(20)) AS Message;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -284,9 +284,9 @@ BEGIN
 
             -- 3. Tạo dữ liệu ở bảng con MỚI
             IF @ChucDanhMoi = N'Quản lý' 
-                INSERT INTO QUANLY (ID, NgayNhanChuc) VALUES (@ID, ISNULL(@NgayNhanChuc, GETDATE()));
+                INSERT INTO QUANLY (ID, NgayNhanChuc) VALUES (@ID, ISNULL(@NgayNhanChuc, GETUTCDATE()));
             ELSE IF @ChucDanhMoi = N'Bếp trưởng' 
-                INSERT INTO BEPTRUONG (ID, ChuyenMon, NgayNhanChuc) VALUES (@ID, @ChuyenMon, ISNULL(@NgayNhanChuc, GETDATE()));
+                INSERT INTO BEPTRUONG (ID, ChuyenMon, NgayNhanChuc) VALUES (@ID, @ChuyenMon, ISNULL(@NgayNhanChuc, GETUTCDATE()));
             ELSE IF @ChucDanhMoi = N'Phục vụ' 
                 INSERT INTO PHUCVU (ID, CaLamViec) VALUES (@ID, @CaLamViec);
             ELSE IF @ChucDanhMoi = N'Lễ tân' 
@@ -377,7 +377,7 @@ BEGIN
         -- Thực hiện xóa mềm (Soft Delete)
         -- A. Update bảng Cha (NHANVIEN)
         UPDATE NHANVIEN
-        SET NgayNghiViec = GETDATE(), 
+        SET NgayNghiViec = GETUTCDATE(), 
             ID_GiamSat = NULL 
         WHERE ID = @ID;
 
@@ -385,14 +385,14 @@ BEGIN
         IF EXISTS (SELECT 1 FROM QUANLY WHERE ID = @ID)
         BEGIN
             UPDATE QUANLY 
-            SET NgayKetThuc = GETDATE() 
+            SET NgayKetThuc = GETUTCDATE() 
             WHERE ID = @ID AND NgayKetThuc IS NULL; 
         END
 
         IF EXISTS (SELECT 1 FROM BEPTRUONG WHERE ID = @ID)
         BEGIN
             UPDATE BEPTRUONG 
-            SET NgayKetThuc = GETDATE() 
+            SET NgayKetThuc = GETUTCDATE() 
             WHERE ID = @ID AND NgayKetThuc IS NULL;
         END
 
@@ -440,7 +440,7 @@ BEGIN
         COMMIT TRANSACTION;
         PRINT N'Đã thêm số điện thoại phụ (' + @SDT_Phu + N') thành công cho nhân viên ID ' + CAST(@ID_NhanVien AS NVARCHAR(20));
         -- Cho backend
-        SELECT N'Đã thêm số ' + @SDT_Phu + N' vào danh sách liên lạc.' AS Message;
+        SELECT N'Đã thêm số ' + @SDT_Phu + N' vào danh sách liên lạc của nhân viên ' + CAST(@ID_NhanVien AS NVARCHAR(20)) + N'.' AS Message;
         
     END TRY
     BEGIN CATCH

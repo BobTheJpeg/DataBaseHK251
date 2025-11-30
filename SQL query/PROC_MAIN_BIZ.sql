@@ -10,7 +10,7 @@ FOR INSERT, UPDATE
 AS
 BEGIN
     -- 1. Check Thời gian đặt không được ở quá khứ (Chỉ check khi Insert mới hoặc Update giờ)
-    IF EXISTS (SELECT 1 FROM inserted WHERE ThoiGianDat < GETDATE())
+    IF EXISTS (SELECT 1 FROM inserted WHERE ThoiGianDat < GETUTCDATE())
     BEGIN
         RAISERROR (N'Lỗi: Thời gian đặt bàn không được nhỏ hơn thời điểm hiện tại.', 16, 1);
         ROLLBACK TRANSACTION;
@@ -52,8 +52,8 @@ BEGIN
         -- VALIDATION
         -- Thời gian đặt phải ở tương lai
         -- Tuy nhiên có xử lý trường hợp tiếp khách vãng lai sẽ cho phép:
-        --  thời gian đặt sẽ sớm hơn GETDATE() 10p để xử lý độ trễ thao tác
-        IF @ThoiGianDat < DATEADD(MINUTE, -10, GETDATE())
+        --  thời gian đặt sẽ sớm hơn GETUTCDATE() 10p để xử lý độ trễ thao tác
+        IF @ThoiGianDat < DATEADD(MINUTE, -10, GETUTCDATE())
             THROW 50001, N'Lỗi: Thời gian đặt phải ở tương lai', 1;
 
         IF @SoLuongKhach <= 0
@@ -68,10 +68,10 @@ BEGIN
         END
 
         -- XỬ LÝ TABLE TURNOVER
-        -- Định nghĩa khung giờ bận: [ThoiGianDat - 1.5h] đến [ThoiGianDat + 1.5h]
+        -- Định nghĩa khung giờ bận: [ThoiGianDat - 1h] đến [ThoiGianDat + 1h]
         -- Bất kỳ đơn đặt bàn nào nằm trong khung này coi như gây xung đột.
-        DECLARE @GioBatDau DATETIME2 = DATEADD(HOUR, -1.5, @ThoiGianDat);
-        DECLARE @GioKetThuc DATETIME2 = DATEADD(HOUR, 1.5, @ThoiGianDat);
+        DECLARE @GioBatDau DATETIME2 = DATEADD(HOUR, -1, @ThoiGianDat);
+        DECLARE @GioKetThuc DATETIME2 = DATEADD(HOUR, 1, @ThoiGianDat);
 
         -- CASE: (KHÁCH CHỈ ĐỊNH BÀN) hoặc (LỄ TÂN CHỌN BÀN)
         IF @ID_Ban IS NOT NULL
@@ -80,7 +80,7 @@ BEGIN
             IF NOT EXISTS (SELECT 1 FROM BAN WHERE ID_Ban = @ID_Ban AND SucChua >= @SoLuongKhach)
                 THROW 50003, N'Lỗi: Bàn không tồn tại hoặc sức chứa không đủ.', 1;
 
-            -- Check 2: Bàn có bị trùng lịch trong khung giờ +/- 1.5 tiếng không? (không check đơn đã hủy)
+            -- Check 2: Bàn có bị trùng lịch trong khung giờ +/- 1 tiếng không? (không check đơn đã hủy)
             IF EXISTS (
                 SELECT 1 FROM DATBAN 
                 WHERE ID_Ban = @ID_Ban 
