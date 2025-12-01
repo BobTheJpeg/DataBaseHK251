@@ -16,7 +16,7 @@ DECLARE @My_ID_LanGoi_2 INT;
 PRINT '--- 1. Đặt bàn ---';
 
 -- Giả định: Khách đặt bàn cho 4 người, đến sau 2 tiếng nữa
-DECLARE @ThoiGianDen DATETIME2 = DATEADD(HOUR, 2, GETDATE());
+DECLARE @ThoiGianDen DATETIME2 = DATEADD(HOUR, 2, GETUTCDATE());
 
 EXEC sp_TaoDatBan 
     @SDT_Khach      = '0999888777', 

@@ -284,26 +284,14 @@ export async function deleteMenuItem(req, res) {
 export async function getStats(req, res) {
   try {
     await poolConnect;
-    const revenueQuery = await pool
-      .request()
-      .query(
-        `SELECT COALESCE(SUM(ThanhTien), 0) AS revenue FROM THANHTOAN WHERE CAST(ThoiGianThanhToan AS DATE) = CAST(GETDATE() AS DATE);`
-      );
-    const ordersQuery = await pool
-      .request()
-      .query(
-        `SELECT COUNT(*) AS count FROM DONGOIMON WHERE CAST(ThoiGianTao AS DATE) = CAST(GETDATE() AS DATE);`
-      );
-    const customersQuery = await pool
-      .request()
-      .query(
-        `SELECT COALESCE(SUM(SoLuongKhach), 0) AS customers FROM DATBAN WHERE CAST(ThoiGianDat AS DATE) = CAST(GETDATE() AS DATE) AND TrangThai != N'Đã hủy';`
-      );
+    const result = await pool.request().execute("sp_GetDailyStats");
+
+    const stats = result.recordset[0];
 
     res.json({
-      revenueToday: revenueQuery.recordset[0].revenue,
-      ordersToday: ordersQuery.recordset[0].count,
-      customersToday: customersQuery.recordset[0].customers,
+      revenueToday: stats.revenueToday,
+      ordersToday: stats.ordersToday,
+      customersToday: stats.customersToday,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -314,9 +302,9 @@ export async function getStats(req, res) {
 
 // Lấy danh sách yêu cầu đang chờ duyệt
 export async function getPendingMenuRequests(req, res) {
-    try {
-        await poolConnect;
-        const result = await pool.request().query(`
+  try {
+    await poolConnect;
+    const result = await pool.request().query(`
             SELECT 
                 R.*, 
                 NV.HoTen as TenBepTruong,
@@ -328,27 +316,28 @@ export async function getPendingMenuRequests(req, res) {
             WHERE R.TrangThai = N'Chờ duyệt'
             ORDER BY R.ThoiGianTao ASC
         `);
-        res.json(result.recordset);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    res.json(result.recordset);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
 // Duyệt hoặc Từ chối
 export async function processMenuRequest(req, res) {
-    const { requestId, managerId, status } = req.body; // status: 'Đã duyệt' / 'Từ chối'
+  const { requestId, managerId, status } = req.body; // status: 'Đã duyệt' / 'Từ chối'
 
-    try {
-        await poolConnect;
-        const result = await pool.request()
-            .input("ID_YeuCau", sql.Int, requestId)
-            .input("ID_QuanLy", sql.Int, managerId)
-            .input("TrangThai", sql.NVarChar(20), status)
-            .execute("sp_DuyetYeuCauCapNhat");
+  try {
+    await poolConnect;
+    const result = await pool
+      .request()
+      .input("ID_YeuCau", sql.Int, requestId)
+      .input("ID_QuanLy", sql.Int, managerId)
+      .input("TrangThai", sql.NVarChar(20), status)
+      .execute("sp_DuyetYeuCauCapNhat");
 
-        const dbMessage = result.recordset[0]?.Message || "Đã xử lý yêu cầu";
-        res.json({ success: true, message: dbMessage });
-    } catch (err) {
-        res.status(400).json({ success: false, error: err.message });
-    }
+    const dbMessage = result.recordset[0]?.Message || "Đã xử lý yêu cầu";
+    res.json({ success: true, message: dbMessage });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
 }

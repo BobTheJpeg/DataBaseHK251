@@ -118,7 +118,7 @@ BEGIN
         UPDATE BAN SET TrangThai = N'Đã đặt' WHERE ID_Ban = @ID_Ban;
         COMMIT TRANSACTION;
         PRINT N'Đặt bàn thành công! Mã bàn: ' + CAST(@ID_Ban AS NVARCHAR(10));
-
+        SELECT N'Đặt bàn thành công! Mã bàn: ' + CAST(@ID_Ban AS NVARCHAR(10)) AS Message;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -218,7 +218,7 @@ ON DONGOIMON
 FOR INSERT, UPDATE
 AS
 BEGIN
-    -- 1. Chặn việc chuyển trạng thái ngược (Đã thanh toán -> Đang phục vụ)
+    -- 1. Chặn việc chuyển trạng thái ngược (Đã thanh toán -> Đang phục vụ)  --> Chỉ cho update
     IF EXISTS (
         SELECT 1 
         FROM deleted d 
