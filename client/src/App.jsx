@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 
+import WaiterDashBoard from "./pages/waiter/WaiterDashboard.jsx";
 import ServerDashboard from "./pages/ServerDashboard"; //WaiterDashboard
 import HeadChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
 import ChefDashboard from "./pages/chef/ChefDashboard.jsx";
@@ -48,7 +49,7 @@ export default function App() {
         path="/server"
         element={
           <ProtectedRoute roles={["Phục vụ"]}>
-            <ServerDashboard />
+            <WaiterDashBoard />
           </ProtectedRoute>
         }
       />
