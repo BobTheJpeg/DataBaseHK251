@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 
-import ServerDashboard from "./pages/ServerDashboard";
+import ServerDashboard from "./pages/ServerDashboard"; //WaiterDashboard
 import HeadChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
 import ChefDashboard from "./pages/chef/ChefDashboard.jsx";
 import StorageDashboard from "./pages/StorageDashboard";
