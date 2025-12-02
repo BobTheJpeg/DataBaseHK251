@@ -41,8 +41,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- 1. Xác định khoảng thời gian cho "Hôm nay" (Theo UTC như code cũ của bạn)
-    -- Lưu ý: Nếu server ở VN, bạn có thể cân nhắc dùng DATEADD(hour, 7, GETUTCDATE()) hoặc GETDATE()
+    -- 1. Xác định khoảng thời gian cho "Hôm nay"
     DECLARE @StartOfDay DATETIME = CAST(CAST(GETUTCDATE() AS DATE) AS DATETIME); 
     DECLARE @EndOfDay   DATETIME = DATEADD(DAY, 1, @StartOfDay);
 
@@ -70,7 +69,6 @@ BEGIN
       AND ThoiGianDat < @EndOfDay
       AND TrangThai != N'Đã hủy'; -- Dùng N'' để đảm bảo so sánh chuỗi Unicode chính xác
 
-    -- 6. Trả về kết quả (1 dòng duy nhất)
     SELECT 
         @Revenue AS revenueToday,
         @Orders AS ordersToday,

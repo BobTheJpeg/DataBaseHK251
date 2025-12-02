@@ -162,6 +162,7 @@ BEGIN
 
         COMMIT TRANSACTION;
         PRINT N'Khách đã nhận bàn. Đơn gọi món đã được tạo.';
+        SELECT N'Khách đã nhận bàn. Đơn gọi món đã được tạo.' AS Message;
 
     END TRY
     BEGIN CATCH
@@ -199,6 +200,7 @@ BEGIN
 
         COMMIT TRANSACTION;
         PRINT N'Đã hủy đặt bàn thành công.';
+        SELECT N'Đã hủy đặt bàn thành công.' AS Message;
 
     END TRY
     BEGIN CATCH
@@ -296,6 +298,7 @@ BEGIN
         DECLARE @NewID INT = SCOPE_IDENTITY();
         
         COMMIT TRANSACTION;
+        SELECT N'Đã tạo lần gọi món thành công!' AS Message
         
         -- Return kết quả
         SELECT @NewID AS ID_LanGoiMoi;
@@ -363,6 +366,7 @@ BEGIN
         END
 
         PRINT N'Đã thêm món thành công.';
+        SELECT N'Đã thêm món thành công.' AS Message;
 
     END TRY
     BEGIN CATCH
@@ -419,6 +423,7 @@ BEGIN
 
         COMMIT TRANSACTION;
         PRINT N'Cập nhật trạng thái thành công: ' + @TrangThaiMoi;
+        SELECT N'Cập nhật trạng thái thành công: ' + @TrangThaiMoi AS Message
 
     END TRY
     BEGIN CATCH
@@ -544,7 +549,7 @@ BEGIN
 
         COMMIT TRANSACTION;
         PRINT N'Thanh toán thành công. Tổng tiền: ' + CAST(@TongTienMon AS NVARCHAR(20)) + N'. Thực thu: ' + CAST((@TongTienMon - @TongGiamGia) AS NVARCHAR(20));
-
+        SELECT N'Thanh toán thành công. Tổng tiền: ' + CAST(@TongTienMon AS NVARCHAR(20)) + N'. Thực thu: ' + CAST((@TongTienMon - @TongGiamGia) AS NVARCHAR(20)) AS Message;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
