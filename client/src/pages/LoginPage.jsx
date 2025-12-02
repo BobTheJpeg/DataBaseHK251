@@ -20,12 +20,12 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      console.log("Role nhận được từ API:", data.user.role);
-
       if (!res.ok) {
-        setError(data.error || "Đăng nhập thất bại");
+        setError(data.error);
         return;
       }
+
+      console.log("Role nhận được từ API:", data.user.role); // Log để kiểm tra API
 
       sessionStorage.setItem("token", data.token);
       sessionStorage.setItem("user", JSON.stringify(data.user));
@@ -51,7 +51,8 @@ export default function LoginPage() {
           break;
         default:
           setError("Tài khoản của bạn chưa được phân quyền truy cập");
-          navigate("/login");
+          navigate("/");
+          sessionStorage.clear();
       }
     } catch (err) {
       console.error(err);

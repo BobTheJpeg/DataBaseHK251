@@ -15,15 +15,21 @@ export async function login(req, res) {
     // 1. Tìm user trong bảng NHANVIEN
     const result = await pool.request().input("username", sql.VarChar, username)
       .query(`
-        SELECT ID, HoTen, Username, Password, ChucDanh 
+        SELECT ID, HoTen, Username, Password, ChucDanh, NgayNghiViec
         FROM NHANVIEN 
-        WHERE Username = @username AND NgayNghiViec IS NULL
+        WHERE Username = @username
       `);
 
     const user = result.recordset[0];
 
     if (!user)
       return res.status(400).json({ error: "Sai tên đăng nhập hoặc mật khẩu" });
+
+    if (user.NgayNghiViec !== null) {
+      return res
+        .status(403)
+        .json({ error: "Bạn đã nghỉ việc, không thể đăng nhập hệ thống." });
+    }
 
     // So sánh: Nếu bcrypt so khớp OK HOẶC mật khẩu trong DB trùng khớp hoàn toàn
     const isMatchHash = await bcrypt
