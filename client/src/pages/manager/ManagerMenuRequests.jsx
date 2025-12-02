@@ -3,7 +3,19 @@ import DashboardLayout from "../../components/DashboardLayout";
 
 export default function ManagerMenuRequests() {
   const [requests, setRequests] = useState([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const user = JSON.parse(sessionStorage.getItem("user"));
+
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError("");
+        setSuccess("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
 
   const loadRequests = async () => {
     try {
@@ -25,6 +37,8 @@ export default function ManagerMenuRequests() {
 
   const handleProcess = async (requestId, status) => {
     if (!confirm(`Bạn chắc chắn muốn ${status} yêu cầu này?`)) return;
+    setError("");
+    setSuccess("");
     try {
       const res = await fetch(
         `http://localhost:3000/api/manager/process/${requestId}`,
@@ -38,16 +52,24 @@ export default function ManagerMenuRequests() {
         }
       );
       const data = await res.json();
-      alert(data.message || data.error);
-      if (res.ok) loadRequests();
+
+      if (res.ok) {
+        setSuccess(data.message); // Hiển thị thông báo thành công từ DB
+        loadRequests();
+      } else {
+        setError(data.error || "Có lỗi xảy ra khi xử lý yêu cầu.");
+      }
     } catch {
-      alert("Lỗi kết nối");
+      setError("Lỗi kết nối đến máy chủ.");
     }
   };
 
   return (
     <DashboardLayout>
       <h2 style={{ color: "#5a381e" }}>Phê Duyệt Yêu Cầu Thực Đơn</h2>
+
+      {error && <div style={styles.errorMsg}>⚠️ {error}</div>}
+      {success && <div style={styles.successMsg}>✅ {success}</div>}
 
       <div
         style={{
@@ -155,4 +177,30 @@ const btnStyle = {
   cursor: "pointer",
   fontSize: "12px",
   fontWeight: "bold",
+};
+const styles = {
+  errorMsg: {
+    backgroundColor: "#ffebee",
+    color: "#c62828",
+    padding: "15px",
+    marginBottom: "20px",
+    borderRadius: "8px",
+    border: "1px solid #ef9a9a",
+    fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  successMsg: {
+    backgroundColor: "#e8f5e9",
+    color: "#2e7d32",
+    padding: "15px",
+    marginBottom: "20px",
+    borderRadius: "8px",
+    border: "1px solid #a5d6a7",
+    fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 };

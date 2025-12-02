@@ -3,10 +3,12 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 
+import WaiterDashBoard from "./pages/waiter/WaiterDashboard.jsx";
 import ServerDashboard from "./pages/ServerDashboard";
 import HeadChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
 import ChefDashboard from "./pages/chef/ChefDashboard.jsx";
-import StorageDashboard from "./pages/StorageDashboard";
+import StorageDashboard from "./pages/storage/StorageDashboard.jsx";
+import StorageHistory from "./pages/storage/StorageHistory.jsx";
 import { ReceptionDashboard } from "./pages/receptionist/";
 import {
   ManageEmployees,
@@ -48,7 +50,7 @@ export default function App() {
         path="/server"
         element={
           <ProtectedRoute roles={["Phục vụ"]}>
-            <ServerDashboard />
+            <WaiterDashBoard />
           </ProtectedRoute>
         }
       />
@@ -89,6 +91,15 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Quản lý kho"]}>
             <StorageDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/storage/history"
+        element={
+          <ProtectedRoute roles={["Quản lý kho"]}>
+            <StorageHistory />
           </ProtectedRoute>
         }
       />

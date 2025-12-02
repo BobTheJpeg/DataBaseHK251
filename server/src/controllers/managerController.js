@@ -50,12 +50,10 @@ export async function addEmployee(req, res) {
     request.input("NgoaiNgu", sql.NVarChar(100), language || null);
 
     const result = await request.execute("sp_ThemNhanVien");
-    const dbMessage =
-      result.recordset[0]?.Message || "Thêm nhân viên thành công";
+    const dbMessage = result.recordset[0]?.Message;
 
     res.json({ success: true, message: dbMessage, data: result });
   } catch (err) {
-    console.error("Lỗi thêm nhân viên:", err.message);
     res.status(400).json({ success: false, error: err.message });
   }
 }
@@ -124,8 +122,8 @@ export async function updateEmployee(req, res) {
     if (language) request.input("NgoaiNgu", sql.NVarChar(100), language);
 
     const result = await request.execute("sp_CapNhatNhanVien");
-    const dbMessage = result.recordset[0]?.Message || "Cập nhật thành công";
 
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -141,11 +139,9 @@ export async function deleteEmployee(req, res) {
       .input("ID", sql.Int, id)
       .execute("sp_XoaNhanVien");
 
-    const dbMessage = result.recordset[0]?.Message || "Đã xóa nhân viên";
-
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
-    console.error("Lỗi xóa nhân viên:", err);
     res.status(500).json({ error: err.message });
   }
 }
@@ -176,7 +172,7 @@ export async function addEmployeePhone(req, res) {
       .input("SDT_Phu", sql.VarChar(20), phone)
       .execute("sp_ThemSDT_Phu");
 
-    const dbMessage = result.recordset[0]?.Message || "Đã thêm SĐT";
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -187,14 +183,13 @@ export async function deleteEmployeePhone(req, res) {
   const { employeeId, phone } = req.body;
   try {
     await poolConnect;
-    // [ĐÃ SỬA LỖI] Dùng 'result' để tránh trùng tên và truy cập được recordset
     const result = await pool
       .request()
       .input("ID_NhanVien", sql.Int, employeeId)
       .input("SDT_Phu", sql.VarChar(20), phone)
       .execute("sp_XoaSDT_Phu");
 
-    const dbMessage = result.recordset[0]?.Message || "Đã xóa SĐT";
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -217,7 +212,7 @@ export async function addMenuItem(req, res) {
       .input("DangKinhDoanh", sql.Bit, 1)
       .execute("sp_ThemMonAn");
 
-    const dbMessage = result.recordset[0]?.Message || "Thêm món thành công";
+    const dbMessage = result.recordset[0]?.Message;
     res.json({
       success: true,
       message: dbMessage,
@@ -246,7 +241,7 @@ export async function updateMenuItem(req, res) {
   try {
     await poolConnect;
     const request = pool.request();
-    request.input("ID", sql.Int, id);
+    request.input("ID", sql.Int, parseInt(id));
     if (name) request.input("Ten", sql.NVarChar(100), name);
     if (price) request.input("DonGia", sql.Decimal(12, 0), price);
     if (category) request.input("PhanLoai", sql.NVarChar(10), category);
@@ -256,7 +251,7 @@ export async function updateMenuItem(req, res) {
       request.input("DangPhucVu", sql.Bit, isServing);
 
     const result = await request.execute("sp_CapNhatMonAn");
-    const dbMessage = result.recordset[0]?.Message || "Cập nhật thành công";
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -272,7 +267,7 @@ export async function deleteMenuItem(req, res) {
       .input("ID", sql.Int, id)
       .execute("sp_XoaMonAn");
 
-    const dbMessage = result.recordset[0]?.Message || "Đã xóa món ăn";
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
@@ -335,7 +330,7 @@ export async function processMenuRequest(req, res) {
       .input("TrangThai", sql.NVarChar(20), status)
       .execute("sp_DuyetYeuCauCapNhat");
 
-    const dbMessage = result.recordset[0]?.Message || "Đã xử lý yêu cầu";
+    const dbMessage = result.recordset[0]?.Message;
     res.json({ success: true, message: dbMessage });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });

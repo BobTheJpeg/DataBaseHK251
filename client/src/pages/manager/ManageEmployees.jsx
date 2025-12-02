@@ -37,6 +37,7 @@ export default function ManageEmployees() {
     Authorization: "Bearer " + sessionStorage.getItem("token"),
   });
 
+  // Tự động ẩn thông báo sau 5s
   useEffect(() => {
     if (error || success) {
       const timer = setTimeout(() => {
@@ -47,6 +48,7 @@ export default function ManageEmployees() {
     }
   }, [error, success]);
 
+  // Load nhân viên
   async function loadEmployees() {
     try {
       setLoading(true);
@@ -100,7 +102,7 @@ export default function ManageEmployees() {
         alert(data.error);
       }
     } catch {
-      alert("Lỗi kết nối");
+      alert("Lỗi kết nối máy chủ");
     }
   }
 
@@ -126,7 +128,7 @@ export default function ManageEmployees() {
         alert(data.error);
       }
     } catch {
-      alert("Lỗi kết nối");
+      alert("Lỗi kết nối máy chủ");
     }
   }
 
@@ -207,7 +209,7 @@ export default function ManageEmployees() {
       setSuccess(data.message);
       loadEmployees();
     } catch {
-      setError("Lỗi kết nối");
+      setError("Lỗi kết nối máy chủ");
     }
   }
 
@@ -313,8 +315,8 @@ export default function ManageEmployees() {
         Quản Lý Nhân Viên
       </h2>
 
-      {error && <div style={styles.errorMsg}>{error}</div>}
-      {success && <div style={styles.successMsg}>{success}</div>}
+      {error && <div style={styles.errorMsg}>⚠️ {error}</div>}
+      {success && <div style={styles.successMsg}>✅ {success}</div>}
 
       <div
         style={{
@@ -639,7 +641,7 @@ export default function ManageEmployees() {
                 <option value="Quản lý">Quản lý</option>
               </select>
 
-              {/* --- [SỬA ĐỔI] HIỂN THỊ ID GIÁM SÁT CHO TẤT CẢ CHỨC DANH CẦN GIÁM SÁT --- */}
+              {/* --- HIỂN THỊ ID GIÁM SÁT CHO TẤT CẢ CHỨC DANH CẦN GIÁM SÁT --- */}
               {!["Quản lý", "Bếp trưởng"].includes(form.role) && (
                 <div style={{ marginTop: "10px" }}>
                   <label style={styles.label}>

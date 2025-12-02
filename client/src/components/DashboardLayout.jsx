@@ -81,9 +81,14 @@ export default function DashboardLayout({ children }) {
 
         {/* --- QUẢN LÝ KHO --- */}
         {hasRole("Quản lý kho") && (
-          <Link style={styles.link} to="/storage">
-            Kho hàng (Inventory)
-          </Link>
+          <>
+            <Link style={styles.link} to="/storage">
+              Kho hàng
+            </Link>
+            <Link style={styles.link} to="/storage/history">
+              Lịch sử
+            </Link>
+          </>
         )}
 
         <div style={{ marginTop: "auto" }}>

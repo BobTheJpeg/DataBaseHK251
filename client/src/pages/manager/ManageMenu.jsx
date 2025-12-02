@@ -40,13 +40,13 @@ export default function ManageMenu() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Không thể tải thực đơn");
+        setError(data.error);
         return;
       }
 
       setMenu(data);
     } catch {
-      setError("Lỗi máy chủ");
+      setError("Lỗi kết nối máy chủ");
     } finally {
       setLoading(false);
     }
@@ -61,10 +61,11 @@ export default function ManageMenu() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    const itemId = editing ? editing.ID || editing.id : null;
 
     const url = editing
-      ? `http://localhost:3000/api/manager/update-menu-item/${editing.id}`
-      : "http://localhost:3000/api/manager/add-menu-item";
+      ? `http://localhost:3000/api/manager/update-menu-item/${itemId}`
+      : `http://localhost:3000/api/manager/add-menu-item`;
 
     const method = editing ? "PUT" : "POST";
 
@@ -84,15 +85,12 @@ export default function ManageMenu() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Lỗi khi lưu món ăn");
+        setError(data.error);
         window.scrollTo(0, 0);
         return;
       }
 
-      setSuccess(
-        data.message ||
-          (editing ? "Cập nhật thành công!" : "Thêm món thành công!")
-      );
+      setSuccess(data.message);
       await loadMenu();
 
       // Chỉ reset form khi thêm mới
@@ -124,11 +122,11 @@ export default function ManageMenu() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Không thể xóa món ăn");
+        setError(data.error);
         return;
       }
 
-      setSuccess(data.message || "Đã xóa món ăn");
+      setSuccess(data.message);
       loadMenu();
     } catch {
       setError("Lỗi kết nối");
@@ -243,7 +241,7 @@ export default function ManageMenu() {
               color: "#5a381e",
             }}
           >
-            {editing ? "✏️ Sửa Món Ăn" : "➕ Thêm Món Mới"}
+            {editing ? `Cập Nhật (ID: ${editing.ID})` : "Thêm Món Mới"}
           </h3>
 
           <form
