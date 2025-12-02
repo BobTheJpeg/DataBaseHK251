@@ -95,6 +95,15 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/storage/history"
+        element={
+          <ProtectedRoute roles={["Quản lý kho"]}>
+            <StorageHistory />
+          </ProtectedRoute>
+        }
+      />
+
       {/* 5. Trang Quản lý (Manager) */}
       <Route
         path="/manager"
