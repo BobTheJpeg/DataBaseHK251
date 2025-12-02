@@ -4,10 +4,11 @@ import LoginPage from "./pages/LoginPage";
 import LandingPage from "./pages/LandingPage";
 
 import WaiterDashBoard from "./pages/waiter/WaiterDashboard.jsx";
-import ServerDashboard from "./pages/ServerDashboard"; //WaiterDashboard
+import ServerDashboard from "./pages/ServerDashboard";
 import HeadChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
 import ChefDashboard from "./pages/chef/ChefDashboard.jsx";
-import StorageDashboard from "./pages/StorageDashboard";
+import StorageDashboard from "./pages/storage/StorageDashboard.jsx";
+import StorageHistory from "./pages/storage/StorageHistory.jsx";
 import { ReceptionDashboard } from "./pages/receptionist/";
 import {
   ManageEmployees,
