@@ -336,3 +336,56 @@ export async function processMenuRequest(req, res) {
     res.status(400).json({ success: false, error: err.message });
   }
 }
+
+// 1. API Xem Báo Cáo Doanh Thu & Chi Tiết (Gọi sp_BaoCaoDoanhThu_ChiTietDon)
+// GET /api/manager/reports/revenue?type=Tháng&start=...&end=...&minRevenue=...
+export async function getRevenueReport(req, res) {
+  try {
+    await poolConnect;
+    const { type, start, end, minRevenue, orderId } = req.query;
+
+    const request = pool.request();
+
+    // Nếu xem chi tiết đơn hàng cụ thể
+    if (orderId) {
+      request.input("ID_Don", sql.Int, parseInt(orderId));
+    } else {
+      // Xem báo cáo tổng hợp
+      request.input("LoaiBaoCao", sql.NVarChar(10), type || "Tháng"); // Mặc định Tháng
+      if (start) request.input("NgayBatDau", sql.Date, start);
+      if (end) request.input("NgayKetThuc", sql.Date, end);
+      if (minRevenue)
+        request.input("TongDoanhThuToiThieu", sql.Decimal(18, 0), minRevenue);
+    }
+
+    const result = await request.execute("sp_BaoCaoDoanhThu_ChiTietDon");
+    res.json(result.recordset);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// 2. API Tạo & Lưu Báo Cáo Định Kỳ (Gọi sp_TaoVaLuuBaoCao)
+// POST /api/manager/reports/generate
+export async function generatePeriodicReport(req, res) {
+  const { type, period, year } = req.body; // type: 'Tháng'/'Quý'/'Năm', period: 1-12, year: 2023
+
+  try {
+    await poolConnect;
+    const request = pool.request();
+
+    request.input("LoaiBaoCao", sql.NVarChar(10), type);
+    request.input("Ky", sql.Int, period);
+    request.input("Nam", sql.Int, year);
+
+    const result = await request.execute("sp_TaoVaLuuBaoCao");
+
+    // SP trả về 2 result sets: [0] là Message, [1] là Dữ liệu vừa tạo
+    const message = result.recordsets[0]?.[0]?.Message;
+    const data = result.recordsets[1]?.[0];
+
+    res.json({ success: true, message, data });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}

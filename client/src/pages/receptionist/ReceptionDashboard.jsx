@@ -94,6 +94,10 @@ export default function ReceptionDashboard() {
   }
 
   async function handleCheckIn(bookingId) {
+    const serverId = prompt("Vui lòng nhập ID Nhân viên phục vụ bàn này:");
+
+    // Validate: Nếu bắt buộc phải có nhân viên thì return nếu trống
+    if (!serverId) return alert("Cần nhập ID phục vụ để nhận bàn!");
     if (!confirm("Khách đã đến? Nhận bàn ngay?")) return;
     try {
       const res = await fetch(

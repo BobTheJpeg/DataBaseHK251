@@ -1,352 +1,195 @@
 import { useState, useEffect } from "react";
-// [FIX] Thêm đuôi .jsx vào đường dẫn import
 import DashboardLayout from "../../components/DashboardLayout.jsx";
 
 export default function ChefDashboard() {
-  const [activeTab, setActiveTab] = useState("queue"); // 'queue' or 'menu_request'
-
-  return (
-    <DashboardLayout>
-      <div style={{ marginBottom: "20px", borderBottom: "1px solid #ddd" }}>
-        <button
-          style={{
-            ...styles.tab,
-            borderBottom: activeTab === "queue" ? "3px solid #b3541e" : "none",
-          }}
-          onClick={() => setActiveTab("queue")}
-        >
-          👩‍🍳 Hàng Đợi Bếp
-        </button>
-        <button
-          style={{
-            ...styles.tab,
-            borderBottom:
-              activeTab === "menu_request" ? "3px solid #b3541e" : "none",
-          }}
-          onClick={() => setActiveTab("menu_request")}
-        >
-          📝 Đề Xuất Thực Đơn
-        </button>
-      </div>
-
-      {activeTab === "queue" ? <KitchenQueue /> : <MenuRequestForm />}
-    </DashboardLayout>
-  );
-}
-
-// --- SUB COMPONENT 1: KITCHEN QUEUE (DUMMY) ---
-function KitchenQueue() {
   const [orders, setOrders] = useState([]);
 
-  useEffect(() => {
+  // Load dữ liệu hàng đợi
+  const loadQueue = () => {
     const token = sessionStorage.getItem("token");
     if (!token) return;
 
-    // Gọi API lấy dummy data
     fetch("http://localhost:3000/api/chef/queue", {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
-      .then(setOrders)
+      .then((data) => {
+        // Map dữ liệu để thêm trường uiStatus (dùng cho việc đổi màu ở frontend)
+        const formattedData = data.map((order) => ({
+          ...order,
+          uiStatus: order.status === "Đang xử lý" ? "Đang chờ" : order.status,
+        }));
+        setOrders(formattedData);
+      })
       .catch((err) => console.error(err));
+  };
+
+  useEffect(() => {
+    loadQueue();
+    const interval = setInterval(loadQueue, 10000); // Tự động refresh mỗi 10s
+    return () => clearInterval(interval);
   }, []);
 
-  const updateStatus = (id, newStatus) => {
-    alert(`(Dummy) Đã chuyển đơn #${id} sang trạng thái: ${newStatus}`);
-    // Logic update state giả lập
-    setOrders(
-      orders.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
-    );
-  };
+  const handleUpdateStatus = async (id, action) => {
+    // CASE 1: Bấm "Nấu" (Chỉ đổi màu UI, không gọi API DB)
+    if (action === "COOKING") {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === id ? { ...o, uiStatus: "Đang nấu" } : o))
+      );
+      return;
+    }
 
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-        gap: "20px",
-      }}
-    >
-      {orders.map((order) => (
-        <div key={order.id} style={styles.card}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <h3 style={{ margin: 0, color: "#b3541e" }}>{order.tableName}</h3>
-            <span style={{ color: "#666" }}>{order.time}</span>
-          </div>
-          <h2 style={{ margin: "10px 0" }}>{order.dishName}</h2>
-          <p>
-            Số lượng: <strong>{order.quantity}</strong>
-          </p>
-          <p>
-            Trạng thái:{" "}
-            <span
-              style={{
-                fontWeight: "bold",
-                color: order.status === "Đang nấu" ? "#e65100" : "#2e7d32",
-              }}
-            >
-              {order.status}
-            </span>
-          </p>
-
-          <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-            <button
-              onClick={() => updateStatus(order.id, "Đang nấu")}
-              style={{ ...styles.btn, background: "#ff9800" }}
-            >
-              Nấu
-            </button>
-            <button
-              onClick={() => updateStatus(order.id, "Sẵn sàng")}
-              style={{ ...styles.btn, background: "#4caf50" }}
-            >
-              Xong
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// --- SUB COMPONENT 2: MENU REQUEST FORM ---
-function MenuRequestForm() {
-  const [requestType, setRequestType] = useState("Thêm");
-  const [menuItems, setMenuItems] = useState([]); // Để chọn món khi Sửa/Xóa
-  const user = JSON.parse(sessionStorage.getItem("user") || "{}");
-  const [form, setForm] = useState({
-    dishId: "",
-    name: "",
-    price: "",
-    category: "Mặn",
-    description: "",
-    reason: "",
-  });
-
-  // Load danh sách món ăn để chọn nếu Sửa/Xóa
-  useEffect(() => {
-    if (requestType !== "Thêm") {
+    // CASE 2: Bấm "Xong" (Gọi API cập nhật DB -> Sẵn sàng phục vụ)
+    if (action === "READY") {
       const token = sessionStorage.getItem("token");
-      fetch("http://localhost:3000/api/manager/menu", {
-        // Tận dụng API get menu
-        headers: { Authorization: "Bearer " + token },
-      })
-        .then((res) => res.json())
-        .then(setMenuItems)
-        .catch(console.error);
-    }
-  }, [requestType]);
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/chef/update-order/${id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            body: JSON.stringify({ status: "Sẵn sàng phục vụ" }),
+          }
+        );
+        const data = await res.json();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:3000/api/chef/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + sessionStorage.getItem("token"),
-        },
-        body: JSON.stringify({
-          chefId: user.id,
-          type: requestType,
-          ...form,
-        }),
-      });
-      const data = await res.json();
-      alert(data.message || data.error);
-      if (res.ok)
-        setForm({
-          dishId: "",
-          name: "",
-          price: "",
-          category: "Mặn",
-          description: "",
-          reason: "",
-        });
-    } catch {
-      alert("Lỗi kết nối");
+        if (res.ok) {
+          // Thành công -> Loại bỏ đơn khỏi hàng đợi
+          setOrders((prev) => prev.filter((o) => o.id !== id));
+        } else {
+          alert(data.error);
+        }
+      } catch (err) {
+        alert("Lỗi kết nối: " + err.message);
+      }
     }
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "600px",
-        background: "white",
-        padding: "30px",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-      }}
-    >
-      <h3 style={{ marginTop: 0, color: "#5a381e" }}>
-        Gửi Yêu Cầu Cập Nhật Thực Đơn
-      </h3>
-
-      <div style={{ marginBottom: "15px" }}>
-        <label style={styles.label}>Loại yêu cầu:</label>
-        <div style={{ display: "flex", gap: "20px" }}>
-          {["Thêm", "Sửa", "Xóa"].map((type) => (
-            <label key={type} style={{ cursor: "pointer" }}>
-              <input
-                type="radio"
-                checked={requestType === type}
-                onChange={() => setRequestType(type)}
-              />{" "}
-              {type} món
-            </label>
-          ))}
-        </div>
+    <DashboardLayout>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <h2 style={{ color: "#5a381e", margin: 0 }}>👩‍🍳 Hàng Đợi Bếp</h2>
+        <button onClick={loadQueue} style={styles.refreshBtn}>
+          🔄 Làm mới
+        </button>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-      >
-        {requestType !== "Thêm" && (
-          <div>
-            <label style={styles.label}>Chọn món ăn:</label>
-            <select
-              style={styles.input}
-              value={form.dishId}
-              onChange={(e) => {
-                const id = e.target.value;
-                const item = menuItems.find((i) => i.ID == id);
-                setForm({
-                  ...form,
-                  dishId: id,
-                  name: item?.Ten || "",
-                  price: item?.DonGia || "",
-                  category: item?.PhanLoai || "Mặn",
-                  description: item?.MoTa || "",
-                });
-              }}
-              required
-            >
-              <option value="">-- Chọn món --</option>
-              {menuItems.map((i) => (
-                <option key={i.ID} value={i.ID}>
-                  {i.Ten}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {requestType !== "Xóa" && (
-          <>
-            <div>
-              <label style={styles.label}>Tên món đề xuất:</label>
-              <input
-                style={styles.input}
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-            </div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "10px",
-              }}
-            >
-              <div>
-                <label style={styles.label}>Đơn giá:</label>
-                <input
-                  type="number"
-                  style={styles.input}
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label style={styles.label}>Phân loại:</label>
-                <select
-                  style={styles.input}
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
-                  }
-                >
-                  <option value="Mặn">Mặn</option>
-                  <option value="Chay">Chay</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label style={styles.label}>Mô tả:</label>
-              <textarea
-                style={styles.input}
-                rows="3"
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-              />
-            </div>
-          </>
-        )}
-
-        <div>
-          <label style={styles.label}>Lý do ({requestType}):</label>
-          <input
-            style={styles.input}
-            placeholder="VD: Món mới theo mùa / Hết nguyên liệu..."
-            value={form.reason}
-            onChange={(e) => setForm({ ...form, reason: e.target.value })}
-            required
-          />
+      {orders.length === 0 ? (
+        <div style={{ textAlign: "center", color: "#666", marginTop: "50px" }}>
+          Hiện không có món nào cần nấu. 👨‍🍳
         </div>
+      ) : (
+        <div style={styles.grid}>
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              style={{
+                ...styles.card,
+                // Đổi màu viền nếu đang nấu
+                borderLeft:
+                  order.uiStatus === "Đang nấu"
+                    ? "5px solid #ff9800"
+                    : "5px solid #b3541e",
+                background: order.uiStatus === "Đang nấu" ? "#fff8e1" : "white",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={styles.tableBadge}>{order.tableName}</span>
+                <span style={{ color: "#666", fontSize: "14px" }}>
+                  🕒 {order.time}
+                </span>
+              </div>
 
-        <button style={styles.submitBtn}>Gửi Yêu Cầu</button>
-      </form>
-    </div>
+              <h3
+                style={{ margin: "10px 0", fontSize: "1.3rem", color: "#333" }}
+              >
+                {order.dishName}
+              </h3>
+
+              {/* Hiển thị trạng thái hiện tại */}
+              <div style={{ marginBottom: "10px", fontSize: "14px" }}>
+                Trạng thái:{" "}
+                <strong
+                  style={{
+                    color:
+                      order.uiStatus === "Đang nấu" ? "#e65100" : "#2e7d32",
+                  }}
+                >
+                  {order.uiStatus}
+                </strong>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
+                {/* Ẩn nút Nấu nếu đang nấu */}
+                {order.uiStatus !== "Đang nấu" && (
+                  <button
+                    onClick={() => handleUpdateStatus(order.id, "COOKING")}
+                    style={{ ...styles.btn, background: "#ff9800" }}
+                  >
+                    🔥 Nấu
+                  </button>
+                )}
+                <button
+                  onClick={() => handleUpdateStatus(order.id, "READY")}
+                  style={{ ...styles.btn, background: "#4caf50" }}
+                >
+                  ✅ Xong
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </DashboardLayout>
   );
 }
 
 const styles = {
-  tab: {
-    padding: "15px 20px",
-    background: "none",
-    border: "none",
-    fontSize: "16px",
-    cursor: "pointer",
-    fontWeight: "bold",
-    color: "#555",
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+    gap: "20px",
   },
   card: {
-    background: "white",
     padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-    borderLeft: "5px solid #b3541e",
+    borderRadius: "12px",
+    boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
+    display: "flex",
+    flexDirection: "column",
+    transition: "0.2s",
+  },
+  tableBadge: {
+    background: "#5a381e",
+    color: "white",
+    padding: "4px 10px",
+    borderRadius: "15px",
+    fontSize: "13px",
+    fontWeight: "bold",
   },
   btn: {
     flex: 1,
-    padding: "8px",
-    border: "none",
-    borderRadius: "5px",
-    color: "white",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  input: {
-    width: "100%",
     padding: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-    marginTop: "5px",
-  },
-  label: { fontWeight: "bold", fontSize: "14px", color: "#333" },
-  submitBtn: {
-    padding: "12px",
-    background: "#b3541e",
-    color: "white",
     border: "none",
-    borderRadius: "5px",
-    fontSize: "16px",
+    borderRadius: "6px",
+    color: "white",
     cursor: "pointer",
     fontWeight: "bold",
+  },
+  refreshBtn: {
+    padding: "8px 15px",
+    background: "white",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    cursor: "pointer",
   },
 };

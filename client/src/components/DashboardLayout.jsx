@@ -43,9 +43,6 @@ export default function DashboardLayout({ children }) {
             <Link style={styles.link} to="/server">
               Gọi Món (Order)
             </Link>
-            <Link style={styles.link} to="/server/tables">
-              Sơ Đồ Bàn
-            </Link>
           </>
         )}
 
@@ -58,10 +55,10 @@ export default function DashboardLayout({ children }) {
         {/* --- BẾP (Bếp trưởng) --- */}
         {hasRole("Bếp trưởng") && (
           <>
-            <Link style={styles.link} to="/chef">
+            <Link style={styles.link} to="/head-chef">
               Hàng Đợi Bếp
             </Link>
-            <Link style={styles.link} to="/chef/add-menu">
+            <Link style={styles.link} to="/head-chef/add-menu">
               Cập Nhật Món Ăn
             </Link>
           </>

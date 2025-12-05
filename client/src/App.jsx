@@ -5,7 +5,7 @@ import LandingPage from "./pages/LandingPage";
 
 import WaiterDashBoard from "./pages/waiter/WaiterDashboard.jsx";
 import ServerDashboard from "./pages/ServerDashboard";
-import HeadChefDashboard from "./pages/head_chef/HeadChefDashboard.jsx";
+import { HeadChefDashboard, RequestMenu } from "./pages/head_chef/";
 import ChefDashboard from "./pages/chef/ChefDashboard.jsx";
 import StorageDashboard from "./pages/storage/StorageDashboard.jsx";
 import StorageHistory from "./pages/storage/StorageHistory.jsx";
@@ -15,6 +15,7 @@ import {
   ManagerHome,
   ManageMenu,
   ManagerMenuRequests,
+  ManagerReports,
 } from "./pages/manager/";
 import AccessDenied from "./pages/AccessDenied";
 import ErrorPage from "./pages/ErrorPage.jsx";
@@ -71,6 +72,14 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Bếp trưởng"]}>
             <HeadChefDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/head-chef/add-menu"
+        element={
+          <ProtectedRoute roles={["Bếp trưởng"]}>
+            <RequestMenu />
           </ProtectedRoute>
         }
       />
@@ -137,6 +146,15 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Quản lý"]}>
             <ManagerMenuRequests />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/manager/reports"
+        element={
+          <ProtectedRoute roles={["Quản lý"]}>
+            <ManagerReports />
           </ProtectedRoute>
         }
       />

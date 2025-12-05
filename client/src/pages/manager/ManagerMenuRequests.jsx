@@ -27,7 +27,7 @@ export default function ManagerMenuRequests() {
       const data = await res.json();
       setRequests(data);
     } catch (err) {
-      console.error(err);
+      setError(err);
     }
   };
 
@@ -57,7 +57,7 @@ export default function ManagerMenuRequests() {
         setSuccess(data.message); // Hiển thị thông báo thành công từ DB
         loadRequests();
       } else {
-        setError(data.error || "Có lỗi xảy ra khi xử lý yêu cầu.");
+        setError(data.error);
       }
     } catch {
       setError("Lỗi kết nối đến máy chủ.");

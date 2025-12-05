@@ -101,6 +101,7 @@ export async function createBooking(req, res) {
 /* -------- CHECK-IN -------- */
 export async function checkInBooking(req, res) {
   const { id } = req.params;
+  const { server_id } = req.body;
   const receptionistId = req.user ? req.user.id : null;
 
   try {
@@ -108,7 +109,7 @@ export async function checkInBooking(req, res) {
     const request = pool.request();
     request.input("ID_DatBan", sql.Int, id);
     request.input("ID_LeTan", sql.Int, receptionistId);
-    request.input("ID_PhucVu", sql.Int, null);
+    request.input("ID_PhucVu", sql.Int, server_id);
 
     await request.execute("sp_NhanBan");
     res.json({

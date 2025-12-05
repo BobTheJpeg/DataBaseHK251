@@ -15,6 +15,9 @@ import {
 
 const router = express.Router();
 
+router.use(verifyToken);
+router.use(allowRoles("Lễ tân", "Quản lý"));
+
 router.get("/tables", getTables);
 router.get("/bookings", getBookings);
 // router.put("/book/:id", updateBooking);
