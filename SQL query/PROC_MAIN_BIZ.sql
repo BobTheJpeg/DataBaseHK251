@@ -35,6 +35,7 @@ END;
 -- BackEnd cần xử lý thao tác sp_TaoDatBan va spNhanBan cho khách đặt trc và khách vãng lai:
 --  Đặt trc: thao tác được gọi cách nhau
 --  Vãng lai:2 thao tác cần được gọi tuần tự tại cùng 1 thời điểm
+
 GO
 CREATE PROCEDURE sp_TaoDatBan
     @SDT_Khach      VARCHAR(20),
@@ -91,9 +92,10 @@ BEGIN
         END
         
         -- CASE: Khách không chỉ định -> Hệ thống tự gợi ý
+        -- Chưa thể hiện được trong frontend
         ELSE
         BEGIN
-            -- Tìm 1 bàn thỏa mãn: Đủ sức chứa VÀ Không bị trùng lịch (ưu tiên bàn nhỏ nhất thảo đk)
+            -- Tìm 1 bàn thỏa mãn: Đủ sức chứa VÀ Không bị trùng lịch (ưu tiên bàn nhỏ nhất thỏa đk)
             SELECT TOP(1) @ID_Ban = B.ID_Ban
             FROM BAN B
             WHERE B.SucChua >= @SoLuongKhach
@@ -299,7 +301,6 @@ BEGIN
         
         COMMIT TRANSACTION;
         SELECT N'Đã tạo lần gọi món thành công!' AS Message
-        
         -- Return kết quả
         SELECT @NewID AS ID_LanGoiMoi;
 
