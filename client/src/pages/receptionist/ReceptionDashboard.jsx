@@ -105,12 +105,14 @@ export default function ReceptionDashboard() {
         {
           method: "POST",
           headers: getHeaders(),
+          body: JSON.stringify({ server_id: serverId }),
         }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       alert(data.message);
       loadTables();
+
       loadBookings();
     } catch (err) {
       alert(err.message);

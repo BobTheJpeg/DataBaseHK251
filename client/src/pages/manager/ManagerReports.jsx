@@ -45,7 +45,7 @@ export default function ManagerReports() {
           }}
           onClick={() => setActiveTab("view")}
         >
-          📊 Xem Doanh Thu
+          Xem Doanh Thu
         </button>
         <button
           style={{
@@ -55,7 +55,7 @@ export default function ManagerReports() {
           }}
           onClick={() => setActiveTab("generate")}
         >
-          💾 Lưu Báo Cáo Định Kỳ
+          Lưu Báo Cáo Định Kỳ
         </button>
       </div>
 
@@ -71,27 +71,20 @@ export default function ManagerReports() {
 // --- SUB-COMPONENT 1: XEM BÁO CÁO ---
 function ViewReport({ onError }) {
   const [data, setData] = useState([]);
-  const [filters, setFilters] = useState({
-    type: "Tháng",
-    start: "",
-    end: "",
-    minRevenue: 0,
-  });
+  const [filterType, setFilterType] = useState("Tháng"); // Chỉ cần lọc theo loại
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  // Load dữ liệu khi Filter thay đổi hoặc mới vào trang
+  useEffect(() => {
+    loadData();
+  }, [filterType]);
+
+  const loadData = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        type: filters.type,
-        ...(filters.start && { start: filters.start }),
-        ...(filters.end && { end: filters.end }),
-        minRevenue: filters.minRevenue,
-      });
-
+      // Gọi API vừa sửa ở Bước 1
       const res = await fetch(
-        `http://localhost:3000/api/manager/reports/revenue?${params}`,
+        `http://localhost:3000/api/manager/reports/revenue?type=${filterType}`,
         {
           headers: {
             Authorization: "Bearer " + sessionStorage.getItem("token"),
@@ -100,10 +93,13 @@ function ViewReport({ onError }) {
       );
       const result = await res.json();
 
-      if (res.ok) setData(result);
-      else onError(result.error); // Báo lỗi từ DB lên component cha
-    } catch {
-      onError("Lỗi kết nối máy chủ");
+      if (res.ok) {
+        setData(result);
+      } else {
+        onError(result.error);
+      }
+    } catch (err) {
+      onError("Lỗi kết nối: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -111,38 +107,22 @@ function ViewReport({ onError }) {
 
   return (
     <div>
-      <form onSubmit={handleSearch} style={styles.filterBar}>
+      {/* FILTER BAR ĐƠN GIẢN HÓA */}
+      <div style={styles.filterBar}>
+        <label style={styles.label}>Xem báo cáo theo:</label>
         <select
-          value={filters.type}
-          onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
           style={styles.input}
         >
-          <option value="Ngày">Theo Ngày</option>
-          <option value="Tuần">Theo Tuần</option>
-          <option value="Tháng">Theo Tháng</option>
-          <option value="Quý">Theo Quý</option>
-          <option value="Năm">Theo Năm</option>
+          <option value="Tháng">Tháng</option>
+          <option value="Quý">Quý</option>
+          <option value="Năm">Năm</option>
         </select>
-        <input
-          type="date"
-          style={styles.input}
-          onChange={(e) => setFilters({ ...filters, start: e.target.value })}
-        />
-        <input
-          type="date"
-          style={styles.input}
-          onChange={(e) => setFilters({ ...filters, end: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Min Revenue"
-          style={{ ...styles.input, width: "120px" }}
-          onChange={(e) =>
-            setFilters({ ...filters, minRevenue: e.target.value })
-          }
-        />
-        <button style={styles.btn}>🔍 Xem</button>
-      </form>
+        <button onClick={loadData} style={styles.btn}>
+          🔄 Làm mới
+        </button>
+      </div>
 
       <div
         style={{
@@ -153,14 +133,18 @@ function ViewReport({ onError }) {
           boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
         }}
       >
-        <table className="table" style={{ width: "100%" }}>
+        <table
+          className="table"
+          style={{ width: "100%", borderCollapse: "collapse" }}
+        >
           <thead style={{ background: "#f5f5f5" }}>
             <tr>
-              <th style={{ padding: "12px" }}>Kỳ Báo Cáo</th>
-              <th>Số Đơn</th>
-              <th style={{ textAlign: "right" }}>Doanh Thu</th>
+              <th style={{ padding: "12px", textAlign: "left" }}>Kỳ Báo Cáo</th>
+              <th style={{ textAlign: "left" }}>Năm</th>
+              <th style={{ textAlign: "right" }}>Tổng Doanh Thu</th>
+              <th style={{ textAlign: "right" }}>Tổng Chi Phí</th>
               <th style={{ textAlign: "right", paddingRight: "20px" }}>
-                Trung Bình/Đơn
+                Lợi Nhuận
               </th>
             </tr>
           </thead>
@@ -168,27 +152,33 @@ function ViewReport({ onError }) {
             {loading && (
               <tr>
                 <td
-                  colSpan="4"
+                  colSpan="5"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
-                  Đang tải...
+                  Đang tải dữ liệu...
                 </td>
               </tr>
             )}
+
             {!loading && data.length === 0 && (
               <tr>
                 <td
-                  colSpan="4"
+                  colSpan="5"
                   style={{ textAlign: "center", padding: "20px" }}
                 >
-                  Không có dữ liệu
+                  Chưa có báo cáo nào được lưu.
                 </td>
               </tr>
             )}
-            {data.map((row, idx) => (
-              <tr key={idx} style={{ borderBottom: "1px solid #eee" }}>
-                <td style={{ padding: "12px" }}>{row["Kỳ Báo Cáo"]}</td>
-                <td style={{ textAlign: "center" }}>{row["Số Lượng Đơn"]}</td>
+
+            {data.map((row) => (
+              <tr key={row.ID} style={{ borderBottom: "1px solid #eee" }}>
+                <td style={{ padding: "12px", fontWeight: "bold" }}>
+                  {row.LoaiBaoCao} {row.Ky}
+                </td>
+                <td>{row.Nam}</td>
+
+                {/* DOANH THU (Màu xanh) */}
                 <td
                   style={{
                     textAlign: "right",
@@ -196,10 +186,33 @@ function ViewReport({ onError }) {
                     color: "#2e7d32",
                   }}
                 >
-                  {row["Doanh Thu"]?.toLocaleString()} đ
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(row.TongDoanhThu)}
                 </td>
-                <td style={{ textAlign: "right", paddingRight: "20px" }}>
-                  {row["Trung Bình/Đơn"]?.toLocaleString()} đ
+
+                {/* CHI PHÍ (Màu đỏ nhạt) */}
+                <td style={{ textAlign: "right", color: "#c62828" }}>
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(row.TongChiPhi)}
+                </td>
+
+                {/* LỢI NHUẬN */}
+                <td
+                  style={{
+                    textAlign: "right",
+                    paddingRight: "20px",
+                    fontWeight: "bold",
+                    color: row.LoiNhuan >= 0 ? "#1565c0" : "red",
+                  }}
+                >
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(row.LoiNhuan)}
                 </td>
               </tr>
             ))}
@@ -313,7 +326,7 @@ function GenerateReport({ onSuccess, onError }) {
           </div>
         </div>
 
-        <button style={styles.submitBtn}>⚡ Tính Toán & Lưu</button>
+        <button style={styles.submitBtn}> Tính Toán & Lưu</button>
       </form>
 
       {result && (

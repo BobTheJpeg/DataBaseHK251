@@ -19,9 +19,10 @@ import {
   getPendingMenuRequests,
   processMenuRequest,
 } from "../controllers/managerController.js";
+import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
-
+router.use(verifyToken);
 router.get("/stats", getStats);
 router.get("/employees", getEmployees);
 router.post("/add-employee", addEmployee);
@@ -35,8 +36,8 @@ router.get("/menu", getMenuItems);
 router.get("/requests", getPendingMenuRequests);
 router.post("/process/:id", processMenuRequest);
 
-router.get("/manager/reports/revenue", getRevenueReport);
-router.post("/manager/reports/generate", generatePeriodicReport);
+router.get("/reports/revenue", getRevenueReport);
+router.post("/reports/generate", generatePeriodicReport);
 
 //redundant manager directly update menu
 router.post("/add-menu-item", addMenuItem);

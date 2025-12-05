@@ -17,7 +17,7 @@ export default function ManagerMenuRequests() {
     }
   }, [error, success]);
 
-  const loadRequests = async () => {
+  async function loadRequests() {
     try {
       const res = await fetch("http://localhost:3000/api/manager/requests", {
         headers: {
@@ -29,9 +29,10 @@ export default function ManagerMenuRequests() {
     } catch (err) {
       setError(err);
     }
-  };
+  }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRequests();
   }, []);
 

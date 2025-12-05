@@ -9,7 +9,11 @@ import { HeadChefDashboard, RequestMenu } from "./pages/head_chef/";
 import ChefDashboard from "./pages/chef/ChefDashboard.jsx";
 import StorageDashboard from "./pages/storage/StorageDashboard.jsx";
 import StorageHistory from "./pages/storage/StorageHistory.jsx";
-import { ReceptionDashboard } from "./pages/receptionist/";
+import {
+  ReceptionDashboard,
+  PaymentPage,
+  PaymentSelection,
+} from "./pages/receptionist/";
 import {
   ManageEmployees,
   ManagerHome,
@@ -90,6 +94,22 @@ export default function App() {
         element={
           <ProtectedRoute roles={["Lễ tân"]}>
             <ReceptionDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reception/payment"
+        element={
+          <ProtectedRoute roles={["Lễ tân"]}>
+            <PaymentSelection />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reception/payment/:tableId"
+        element={
+          <ProtectedRoute roles={["Lễ tân"]}>
+            <PaymentPage />
           </ProtectedRoute>
         }
       />

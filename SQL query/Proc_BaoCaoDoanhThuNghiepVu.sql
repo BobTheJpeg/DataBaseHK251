@@ -45,6 +45,7 @@ BEGIN
         ELSE IF @LoaiBaoCao = N'Năm'
         BEGIN
              -- Với năm, tham số Kỳ có thể là chính năm đó hoặc bỏ qua, ở đây ta dùng @Nam
+            SET @Ky = @Nam;
             SET @TuNgay = DATEFROMPARTS(@Nam, 1, 1);
             SET @DenNgay = DATEFROMPARTS(@Nam, 12, 31);
         END

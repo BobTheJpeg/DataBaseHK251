@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => res.send("Restaurant backend running ✓"));
+app.get("/", (req, res) => res.send("Restaurant backend running"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/manager", managerRoutes);

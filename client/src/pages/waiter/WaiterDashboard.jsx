@@ -20,7 +20,6 @@ export default function WaiterDashBoard() {
     Authorization: "Bearer " + sessionStorage.getItem("token"),
   });
 
-  // --- 1. LOAD DATA ---
   async function loadActiveOrders() {
     try {
       const res = await fetch("http://localhost:3000/api/waiter/orders", {
@@ -50,7 +49,6 @@ export default function WaiterDashBoard() {
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. LOGIC TẠO LƯỢT MỚI (Flow 1: Tạo mới -> Menu) ---
   const handleCreateNewRound = async (order) => {
     if (!confirm(`Tạo lượt gọi mới cho Bàn ${order.table_id}?`)) return;
 
@@ -63,8 +61,6 @@ export default function WaiterDashBoard() {
       const data = await res.json();
 
       if (res.ok) {
-        // Tạo xong -> Mở ngay Menu để chọn món
-        openMenuForRound(data.roundId, order.table_id);
         loadActiveOrders();
       } else {
         alert(data.error);
@@ -74,7 +70,6 @@ export default function WaiterDashBoard() {
     }
   };
 
-  // --- 3. LOGIC XEM CHI TIẾT (Flow 2: Xem -> (Option) Thêm món / Phục vụ) ---
   const handleViewRoundDetail = async (round, tableId) => {
     try {
       // Gọi API lấy chi tiết các món trong lượt này
@@ -176,7 +171,7 @@ export default function WaiterDashBoard() {
         const data = await res.json();
         alert(data.error);
       }
-    } catch (err) {
+    } catch {
       alert("Lỗi kết nối");
     }
   };
@@ -583,18 +578,16 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: "10px",
     background: "#f5f5f5",
     borderRadius: "4px",
     padding: "2px",
   },
   counterBtn: {
-    width: "25px",
-    height: "25px",
     border: "none",
     background: "white",
     borderRadius: "4px",
     cursor: "pointer",
+    color: "#5a381e",
     fontWeight: "bold",
     boxShadow: "0 1px 2px rgba(0,0,0,0.1)",
   },

@@ -5,11 +5,13 @@ import express from "express";
 // ...
 const router = express.Router();
 router.use(verifyToken);
+
 router.get("/orders", waiterController.getActiveOrders);
 router.get("/menu", waiterController.getMenu);
+
 router.get("/round/:roundId", waiterController.getRoundDetail);
-router.post("/round/start", waiterController.startRound); // Tạo lượt
-router.post("/round/add-items", waiterController.addItemsToRound); // Thêm món
+router.post("/round/start", waiterController.startRound);
+router.post("/round/add-items", waiterController.addItemsToRound);
 router.post("/round/status", waiterController.updateRoundStatus);
 
 export default router;

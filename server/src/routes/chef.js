@@ -10,6 +10,7 @@ import { allowRoles } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 router.use(verifyToken);
+
 router.get("/queue", getKitchenQueue);
 router.put("/update-order/:id", updateOrderStatus);
 router.post("/submit", submitMenuRequest);

@@ -78,7 +78,7 @@ export default function ChefDashboard() {
           marginBottom: "20px",
         }}
       >
-        <h2 style={{ color: "#5a381e", margin: 0 }}>👩‍🍳 Hàng Đợi Bếp</h2>
+        <h2 style={{ color: "#5a381e", margin: 0 }}>Hàng Đợi Bếp</h2>
         <button onClick={loadQueue} style={styles.refreshBtn}>
           🔄 Làm mới
         </button>
@@ -86,7 +86,7 @@ export default function ChefDashboard() {
 
       {orders.length === 0 ? (
         <div style={{ textAlign: "center", color: "#666", marginTop: "50px" }}>
-          Hiện không có món nào cần nấu. 👨‍🍳
+          Hiện không có món nào cần nấu.
         </div>
       ) : (
         <div style={styles.grid}>
@@ -136,14 +136,14 @@ export default function ChefDashboard() {
                     onClick={() => handleUpdateStatus(order.id, "COOKING")}
                     style={{ ...styles.btn, background: "#ff9800" }}
                   >
-                    🔥 Nấu
+                    Nấu
                   </button>
                 )}
                 <button
                   onClick={() => handleUpdateStatus(order.id, "READY")}
                   style={{ ...styles.btn, background: "#4caf50" }}
                 >
-                  ✅ Xong
+                  Xong
                 </button>
               </div>
             </div>
@@ -191,5 +191,6 @@ const styles = {
     border: "1px solid #ddd",
     borderRadius: "6px",
     cursor: "pointer",
+    color: "#5a381e",
   },
 };

@@ -51,7 +51,6 @@ export async function updateOrderStatus(req, res) {
     await poolConnect;
     const request = pool.request();
 
-    // Map trạng thái từ Frontend sang Database
     let dbStatus = "";
 
     // Trường hợp 1: Bấm "Xong" -> Chuyển thành 'Sẵn sàng phục vụ'

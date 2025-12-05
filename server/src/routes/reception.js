@@ -6,11 +6,12 @@ import {
   getTables,
   getBookings,
   createBooking,
-  updateTableStatus,
-  updateBooking,
-  deleteBooking,
   checkInBooking,
   cancelBooking,
+  getCustomerInfo,
+  getServingOrders,
+  getBillDetails,
+  processPayment,
 } from "../controllers/receptionController.js";
 
 const router = express.Router();
@@ -20,11 +21,14 @@ router.use(allowRoles("Lễ tân", "Quản lý"));
 
 router.get("/tables", getTables);
 router.get("/bookings", getBookings);
-// router.put("/book/:id", updateBooking);
-// router.delete("/book/:id", deleteBooking);
+
 router.post("/book", createBooking);
 router.post("/check-in/:id", checkInBooking);
 router.post("/cancel/:id", cancelBooking);
-// router.post("/table-status", updateTableStatus);
+
+router.get("/customer", getCustomerInfo);
+router.post("/pay", processPayment);
+router.get("/bill/:orderId", getBillDetails);
+router.get("/serving-orders", getServingOrders);
 
 export default router;

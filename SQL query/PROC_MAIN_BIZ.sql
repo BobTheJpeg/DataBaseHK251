@@ -441,7 +441,7 @@ END;
 GO
 CREATE PROCEDURE sp_ThanhToan
     @ID_Don             INT,
-    @ID_LeTan           VARCHAR(50),
+    @ID_LeTan           INT,
     @PhuongThuc         NVARCHAR(50),
     
     -- Các tham số Giảm giá (Optional)

@@ -185,7 +185,8 @@ CREATE TABLE DONGOIMON (
     TrangThai       NVARCHAR(20)        NOT NULL CHECK (TrangThai IN (N'Đang phục vụ', N'Đã thanh toán')),
     
     ID_Ban          INT                 NULL,
-    ID_PhucVu       INT                 NULL
+    ID_PhucVu       INT                 NULL,
+    TongTienTamTinh DECIMAL(18, 0)      DEFAULT 0
 );
 
 -- Weak Entity: LANGOIMON_MON
@@ -249,10 +250,10 @@ CREATE TABLE CAPNHAT_MONAN (
 
 -- Tạo bảng NGUYENLIEU_MONAN -------------------
 -- Dùng để lưu nguyên liệu cần dùng cho mỗi món ăn (công thức chế biến)
-CREATE TABLE NGUYENLIEU_MONAN (
-    ID                  INT IDENTITY(1,1)   PRIMARY KEY,
-    ID_MonAN            INT             NOT NULL,
-    ID_NguyenLieu       INT             NOT NULL,
-    SoLuongNgLieuDung   DECIMAL(12,0)   NOT NULL CHECK (SoLuongNgLieuDung > 0),
-    DonViTinh           NVARCHAR(500)   NOT NULL
-);
+--CREATE TABLE NGUYENLIEU_MONAN (
+--    ID                  INT IDENTITY(1,1)   PRIMARY KEY,
+--    ID_MonAN            INT             NOT NULL,
+--    ID_NguyenLieu       INT             NOT NULL,
+--    SoLuongNgLieuDung   DECIMAL(12,0)   NOT NULL CHECK (SoLuongNgLieuDung > 0),
+--    DonViTinh           NVARCHAR(500)   NOT NULL
+--);

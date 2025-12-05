@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }) {
             <Link style={styles.link} to="/reception">
               Đặt Bàn & Check-in
             </Link>
-            <Link style={styles.link} to="/reception/payments">
+            <Link style={styles.link} to="/reception/payment">
               Thanh toán
             </Link>
           </>

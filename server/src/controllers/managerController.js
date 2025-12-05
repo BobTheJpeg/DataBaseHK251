@@ -342,23 +342,34 @@ export async function processMenuRequest(req, res) {
 export async function getRevenueReport(req, res) {
   try {
     await poolConnect;
-    const { type, start, end, minRevenue, orderId } = req.query;
+    const { type } = req.query; // type: 'Tháng', 'Quý', 'Năm'
 
     const request = pool.request();
 
-    // Nếu xem chi tiết đơn hàng cụ thể
-    if (orderId) {
-      request.input("ID_Don", sql.Int, parseInt(orderId));
-    } else {
-      // Xem báo cáo tổng hợp
-      request.input("LoaiBaoCao", sql.NVarChar(10), type || "Tháng"); // Mặc định Tháng
-      if (start) request.input("NgayBatDau", sql.Date, start);
-      if (end) request.input("NgayKetThuc", sql.Date, end);
-      if (minRevenue)
-        request.input("TongDoanhThuToiThieu", sql.Decimal(18, 0), minRevenue);
+    let query = `
+      SELECT 
+        ID, 
+        LoaiBaoCao, 
+        Ky, 
+        Nam, 
+        TongDoanhThu, 
+        TongChiPhi, 
+        LoiNhuan,
+        ThoiGianLap
+      FROM BAOCAODOANHTHU
+      WHERE 1=1
+    `;
+
+    // Nếu có lọc theo loại (Tháng/Quý/Năm)
+    if (type) {
+      request.input("LoaiBaoCao", sql.NVarChar(10), type);
+      query += " AND LoaiBaoCao = @LoaiBaoCao";
     }
 
-    const result = await request.execute("sp_BaoCaoDoanhThu_ChiTietDon");
+    // Sắp xếp: Năm mới nhất, Kỳ mới nhất lên đầu
+    query += " ORDER BY Nam DESC, Ky DESC";
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (err) {
     res.status(500).json({ error: err.message });

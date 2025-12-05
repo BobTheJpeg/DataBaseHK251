@@ -4,12 +4,12 @@ import sql from "mssql";
 const config = {
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  server: process.env.DB_SERVER, // localhost
-  database: process.env.DB_NAME, // RestaurantDB
+  server: process.env.DB_SERVER,
+  database: process.env.DB_NAME,
   options: {
-    trustServerCertificate: true, // required for local dev
+    trustServerCertificate: true,
   },
 };
 
-export const pool = new sql.ConnectionPool(config);
+export const pool = new sql.ConnectionPool(config); //can have multiple connections
 export const poolConnect = pool.connect();

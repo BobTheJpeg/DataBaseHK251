@@ -16,7 +16,6 @@ export default function MenuRequests() {
     reason: "",
   });
 
-  // Load danh sách món ăn khi cần Sửa/Xóa
   useEffect(() => {
     if (requestType !== "Thêm") {
       const token = sessionStorage.getItem("token");
@@ -66,7 +65,7 @@ export default function MenuRequests() {
     <DashboardLayout>
       <div style={{ maxWidth: "800px", margin: "0 auto" }}>
         <h2 style={{ color: "#5a381e", marginBottom: "20px" }}>
-          📝 Đề Xuất Thực Đơn Mới
+          Đề Xuất Thực Đơn Mới
         </h2>
 
         <div style={styles.card}>
