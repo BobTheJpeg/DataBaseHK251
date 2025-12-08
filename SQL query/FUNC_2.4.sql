@@ -2,6 +2,9 @@
 -- T-SQL FUNCTION: dbo.TinhTongLuongTheoChucDanh
 -- Tính tổng lương của tất cả nhân viên dựa trên Chức danh
 -- ===============================================================
+GO 
+USE DB_RESTAURANT
+
 IF OBJECT_ID('dbo.TinhTongLuongTheoChucDanh', 'FN') IS NOT NULL
     DROP FUNCTION dbo.TinhTongLuongTheoChucDanh;
 GO
